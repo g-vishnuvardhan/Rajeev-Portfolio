@@ -13,8 +13,8 @@ function Photo({ item, index, count, layout, drag, mobile, onOpen, onHover }) {
   const hovered = useRef(false)
   const born = useRef(null)
   const { p, r } = useMemo(() => layouts[layout](index, count), [layout, index, count])
-  const h = mobile ? 2.8 : 3.5
-  const w = Math.min(h * item.ratio, mobile ? 4.2 : 5.4)
+  const h = mobile ? 2.2 : 2.45
+  const w = Math.min(h * item.ratio, mobile ? 3.4 : 3.8)
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime
@@ -104,11 +104,11 @@ export default function GalleryScene({ items, layout, visible, mobile, onOpen, o
       <Canvas
         frameloop={visible ? 'always' : 'never'}
         dpr={[1, mobile ? 1.5 : 2]}
-        camera={{ position: [0, 0, mobile ? 11 : 7.2], fov: 45 }}
+        camera={{ position: [0, 0, mobile ? 12 : 8.0], fov: 45 }}
         gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
         aria-hidden="true"
       >
-        <fog attach="fog" args={['#040407', 10, 25]} />
+        <fog attach="fog" args={['#040407', 9, 23]} />
         <Rig key={layout} layout={layout} drag={drag}>
           {items.map((item, i) => (
             <Photo
