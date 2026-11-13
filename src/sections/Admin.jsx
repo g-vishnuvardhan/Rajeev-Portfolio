@@ -4,6 +4,10 @@ import {
   logoutAdmin,
   getCurrentAdmin,
   isSupabaseConfigured,
+  getStoredAdminCredentials,
+  updateAdminEmail,
+  updateAdminPassword,
+  resetAdminPasswordWithOldPassword,
   addGalleryPhoto,
   deleteGalleryPhoto,
   saveGalleryOrder,
@@ -22,8 +26,39 @@ export default function Admin() {
   const [loginError, setLoginError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Forgot Password State (Recovery with Old Password)
+  const [showForgot, setShowForgot] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotOldPassword, setForgotOldPassword] = useState('')
+  const [forgotNewPassword, setForgotNewPassword] = useState('')
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('')
+  const [forgotError, setForgotError] = useState('')
+  const [forgotSuccess, setForgotSuccess] = useState('')
+  const [forgotSubmitting, setForgotSubmitting] = useState(false)
+
+  // Security Tab State (Change Email & Change Password)
+  const [emailForm, setEmailForm] = useState({
+    currentEmail: '',
+    currentPassword: '',
+    newEmail: '',
+    confirmNewEmail: '',
+  })
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [emailError, setEmailError] = useState('')
+  const [emailSuccess, setEmailSuccess] = useState('')
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentEmail: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  })
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState('')
+
   // Dashboard State
-  const [activeTab, setActiveTab] = useState('gallery') // 'gallery' | 'content' | 'database'
+  const [activeTab, setActiveTab] = useState('gallery') // 'gallery' | 'content' | 'security' | 'database'
   const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id || 'cinematography')
 
   // New Image Form
@@ -99,6 +134,92 @@ export default function Admin() {
   const handleLogout = async () => {
     await logoutAdmin()
     setAdminUser(null)
+  }
+
+  // Sync active user email to security forms
+  useEffect(() => {
+    if (adminUser?.email) {
+      setEmailForm((prev) => ({ ...prev, currentEmail: adminUser.email }))
+      setPasswordForm((prev) => ({ ...prev, currentEmail: adminUser.email }))
+    }
+  }, [adminUser])
+
+  // Handle Forgot Password (Recovery via Old Password)
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    setForgotError('')
+    setForgotSuccess('')
+    setForgotSubmitting(true)
+    try {
+      await resetAdminPasswordWithOldPassword({
+        email: forgotEmail,
+        oldPassword: forgotOldPassword,
+        newPassword: forgotNewPassword,
+        confirmNewPassword: forgotConfirmPassword,
+      })
+      setForgotSuccess('✓ Password verified & reset successfully! You can now sign in.')
+      setLoginEmail(forgotEmail)
+      setLoginPassword(forgotNewPassword)
+      setTimeout(() => {
+        setShowForgot(false)
+        setForgotSuccess('')
+        setForgotOldPassword('')
+        setForgotNewPassword('')
+        setForgotConfirmPassword('')
+      }, 2000)
+    } catch (err) {
+      setForgotError(err.message || 'Password reset failed.')
+    } finally {
+      setForgotSubmitting(false)
+    }
+  }
+
+  // Handle Update Email with Verification
+  const handleUpdateEmail = async (e) => {
+    e.preventDefault()
+    setEmailError('')
+    setEmailSuccess('')
+    setEmailLoading(true)
+    try {
+      const updated = await updateAdminEmail(emailForm)
+      setAdminUser(updated)
+      setEmailSuccess(`✓ Admin email successfully updated to ${updated.email}!`)
+      setEmailForm({
+        currentEmail: updated.email,
+        currentPassword: '',
+        newEmail: '',
+        confirmNewEmail: '',
+      })
+      setPasswordForm((prev) => ({ ...prev, currentEmail: updated.email }))
+      setTimeout(() => setEmailSuccess(''), 5000)
+    } catch (err) {
+      setEmailError(err.message || 'Failed to update email.')
+    } finally {
+      setEmailLoading(false)
+    }
+  }
+
+  // Handle Update Password with Verification
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess('')
+    setPasswordLoading(true)
+    try {
+      await updateAdminPassword(passwordForm)
+      setPasswordSuccess('✓ Admin master password successfully updated!')
+      setPasswordForm({
+        currentEmail: adminUser?.email || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmNewPassword: '',
+      })
+      setTimeout(() => setPasswordSuccess(''), 5000)
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to update password.')
+    } finally {
+      setPasswordLoading(false)
+    }
   }
 
   // Auto-detect image ratio from file
@@ -243,83 +364,192 @@ export default function Admin() {
   // RENDER: Login Gate
   // -------------------------------------------------------------
   if (!adminUser) {
+    const currentCreds = getStoredAdminCredentials()
+
     return (
       <div className="admin-page admin-login-wrapper">
         <div className="admin-login-card glass-panel">
-          <div className="admin-login-head">
-            <span className="admin-badge">Secure Control Center</span>
-            <h2>Rajeev Kumar Portfolio</h2>
-            <p className="admin-subtext">Sign in to manage gallery photos, edit homepage content, and control database records.</p>
-          </div>
+          {showForgot ? (
+            <>
+              <div className="admin-login-head">
+                <span className="admin-badge">Account Recovery</span>
+                <h2>Reset Admin Password</h2>
+                <p className="admin-subtext">
+                  Verify your registered admin email and a previously used/old password to set a new password.
+                </p>
+              </div>
 
-          <form onSubmit={handleLogin} className="admin-login-form">
-            {loginError && <div className="admin-alert admin-alert--error">{loginError}</div>}
+              <form onSubmit={handleForgotPassword} className="admin-login-form">
+                {forgotError && <div className="admin-alert admin-alert--error">{forgotError}</div>}
+                {forgotSuccess && <div className="admin-alert admin-alert--success">{forgotSuccess}</div>}
 
-            <label>
-              Admin Email
-              <input
-                type="email"
-                required
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="247r1a05e9@cmrtc.ac.in"
-                autoComplete="email"
-              />
-            </label>
+                <label>
+                  Registered Admin Email
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder={currentCreds.email}
+                    autoComplete="email"
+                  />
+                </label>
 
-            <label>
-              Security Password
-              <input
-                type="password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••••••"
-                autoComplete="current-password"
-              />
-            </label>
+                <label>
+                  Previous / Old Password (Verification)
+                  <input
+                    type="password"
+                    required
+                    value={forgotOldPassword}
+                    onChange={(e) => setForgotOldPassword(e.target.value)}
+                    placeholder="Enter previously known password"
+                    autoComplete="current-password"
+                  />
+                </label>
 
-            <button type="submit" className="glass-btn glass-btn--primary admin-submit-btn" disabled={isSubmitting}>
-              {isSubmitting ? 'Authenticating...' : 'Authenticate & Sign In →'}
-            </button>
-          </form>
+                <label>
+                  New Password (min 6 characters)
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={forgotNewPassword}
+                    onChange={(e) => setForgotNewPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    autoComplete="new-password"
+                  />
+                </label>
 
-          {!isSupabaseConfigured && (
-            <div className="admin-demo-box">
-              <p className="admin-demo-title">💡 Authorized Admin Access</p>
-              <p className="admin-demo-text">
-                Click below to auto-fill your admin credentials (or link Supabase in <code>.env</code> for cloud auth):
-              </p>
-              <button
-                type="button"
-                className="admin-demo-btn"
-                onClick={() => {
-                  setLoginEmail('247r1a05e9@cmrtc.ac.in')
-                  setLoginPassword('247r1a05e9cmr')
-                }}
-              >
-                Auto-fill Admin Credentials (247r1a05e9@cmrtc.ac.in)
-              </button>
-            </div>
+                <label>
+                  Confirm New Password
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={forgotConfirmPassword}
+                    onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    autoComplete="new-password"
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  className="glass-btn glass-btn--primary admin-submit-btn"
+                  disabled={forgotSubmitting}
+                >
+                  {forgotSubmitting ? 'Verifying & Resetting...' : 'Verify Old Password & Reset →'}
+                </button>
+              </form>
+
+              <div className="admin-login-footer">
+                <button
+                  type="button"
+                  className="admin-text-link"
+                  onClick={() => {
+                    setShowForgot(false)
+                    setForgotError('')
+                    setForgotSuccess('')
+                  }}
+                >
+                  ← Back to Admin Sign In
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="admin-login-head">
+                <span className="admin-badge">Secure Control Center</span>
+                <h2>Rajeev Kumar Portfolio</h2>
+                <p className="admin-subtext">Sign in to manage gallery photos, edit homepage content, and control database records.</p>
+              </div>
+
+              <form onSubmit={handleLogin} className="admin-login-form">
+                {loginError && <div className="admin-alert admin-alert--error">{loginError}</div>}
+
+                <label>
+                  Admin Email
+                  <input
+                    type="email"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder={currentCreds.email}
+                    autoComplete="email"
+                  />
+                </label>
+
+                <label>
+                  Security Password
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    autoComplete="current-password"
+                  />
+                </label>
+
+                <div className="admin-field-helper">
+                  <button
+                    type="button"
+                    className="admin-text-link"
+                    onClick={() => {
+                      setShowForgot(true)
+                      setForgotEmail(loginEmail || currentCreds.email)
+                      setForgotError('')
+                      setForgotSuccess('')
+                    }}
+                  >
+                    Forgot Password? (Reset via Old Password)
+                  </button>
+                </div>
+
+                <button type="submit" className="glass-btn glass-btn--primary admin-submit-btn" disabled={isSubmitting}>
+                  {isSubmitting ? 'Authenticating...' : 'Authenticate & Sign In →'}
+                </button>
+              </form>
+
+              {!isSupabaseConfigured && (
+                <div className="admin-demo-box">
+                  <p className="admin-demo-title">💡 Authorized Admin Access</p>
+                  <p className="admin-demo-text">
+                    Click below to auto-fill current active credentials (or link Supabase in <code>.env</code> for cloud auth):
+                  </p>
+                  <button
+                    type="button"
+                    className="admin-demo-btn"
+                    onClick={() => {
+                      const c = getStoredAdminCredentials()
+                      setLoginEmail(c.email)
+                      setLoginPassword(c.password)
+                    }}
+                  >
+                    Auto-fill Current Credentials ({currentCreds.email})
+                  </button>
+                </div>
+              )}
+
+              <div className="admin-login-footer">
+                <a
+                  href="/"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (window.location.hash.startsWith('#/admin') || window.location.hash.startsWith('#admin')) {
+                      window.location.hash = ''
+                    } else {
+                      window.history.pushState(null, '', '/')
+                      window.dispatchEvent(new PopStateEvent('popstate'))
+                    }
+                  }}
+                  className="admin-back-link"
+                >
+                  ← Return to Public Portfolio
+                </a>
+              </div>
+            </>
           )}
-
-          <div className="admin-login-footer">
-            <a
-              href="/"
-              onClick={(e) => {
-                e.preventDefault()
-                if (window.location.hash.startsWith('#/admin') || window.location.hash.startsWith('#admin')) {
-                  window.location.hash = ''
-                } else {
-                  window.history.pushState(null, '', '/')
-                  window.dispatchEvent(new PopStateEvent('popstate'))
-                }
-              }}
-              className="admin-back-link"
-            >
-              ← Return to Public Portfolio
-            </a>
-          </div>
         </div>
       </div>
     )
@@ -359,10 +589,16 @@ export default function Admin() {
             ✏️ Homepage & Copy
           </button>
           <button
+            className={`admin-tab-btn ${activeTab === 'security' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('security')}
+          >
+            🔐 Account Security
+          </button>
+          <button
             className={`admin-tab-btn ${activeTab === 'database' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('database')}
           >
-            🔐 Database Config
+            🗄️ Database & Cloud
           </button>
         </nav>
 
@@ -728,7 +964,173 @@ export default function Admin() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: DATABASE CONFIG & SECURITY */}
+        {/* TAB 3: ACCOUNT & CREDENTIAL SECURITY */}
+        {/* ========================================================= */}
+        {activeTab === 'security' && (
+          <div className="admin-security-section">
+            <div className="admin-section-header">
+              <div>
+                <h2>Admin Credentials & Security Settings</h2>
+                <p>Change your admin login email and master password with two-step credential verification.</p>
+              </div>
+            </div>
+
+            <div className="admin-grid-2">
+              {/* Change Email Card */}
+              <div className="admin-card glass-panel">
+                <h3>Change Admin Email</h3>
+                <p className="admin-subtext" style={{ marginBottom: '1.2rem' }}>
+                  Verify your current email and password to update to a new login email.
+                </p>
+
+                {emailError && <div className="admin-alert admin-alert--error">{emailError}</div>}
+                {emailSuccess && <div className="admin-alert admin-alert--success">{emailSuccess}</div>}
+
+                <form onSubmit={handleUpdateEmail} className="admin-security-form">
+                  <label>
+                    Current Registered Email (Verification)
+                    <input
+                      type="email"
+                      required
+                      value={emailForm.currentEmail}
+                      onChange={(e) => setEmailForm({ ...emailForm, currentEmail: e.target.value })}
+                      placeholder="Current registered email"
+                      autoComplete="email"
+                    />
+                  </label>
+
+                  <label>
+                    Current Password (Verification)
+                    <input
+                      type="password"
+                      required
+                      value={emailForm.currentPassword}
+                      onChange={(e) => setEmailForm({ ...emailForm, currentPassword: e.target.value })}
+                      placeholder="••••••••••••"
+                      autoComplete="current-password"
+                    />
+                  </label>
+
+                  <label>
+                    New Admin Email Address
+                    <input
+                      type="email"
+                      required
+                      value={emailForm.newEmail}
+                      onChange={(e) => setEmailForm({ ...emailForm, newEmail: e.target.value })}
+                      placeholder="new-admin@example.com"
+                      autoComplete="email"
+                    />
+                  </label>
+
+                  <label>
+                    Confirm New Admin Email Address
+                    <input
+                      type="email"
+                      required
+                      value={emailForm.confirmNewEmail}
+                      onChange={(e) => setEmailForm({ ...emailForm, confirmNewEmail: e.target.value })}
+                      placeholder="Repeat new email"
+                      autoComplete="email"
+                    />
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={emailLoading}
+                    className="glass-btn glass-btn--primary admin-save-btn"
+                    style={{ marginTop: '0.8rem' }}
+                  >
+                    {emailLoading ? 'Verifying & Updating...' : '✓ Verify & Update Email'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Change Password Card */}
+              <div className="admin-card glass-panel">
+                <h3>Change Admin Password</h3>
+                <p className="admin-subtext" style={{ marginBottom: '1.2rem' }}>
+                  Verify your registered email and current password to set a new security password.
+                </p>
+
+                {passwordError && <div className="admin-alert admin-alert--error">{passwordError}</div>}
+                {passwordSuccess && <div className="admin-alert admin-alert--success">{passwordSuccess}</div>}
+
+                <form onSubmit={handleUpdatePassword} className="admin-security-form">
+                  <label>
+                    Registered Admin Email (Verification)
+                    <input
+                      type="email"
+                      required
+                      value={passwordForm.currentEmail}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, currentEmail: e.target.value })}
+                      placeholder="Registered admin email"
+                      autoComplete="email"
+                    />
+                  </label>
+
+                  <label>
+                    Current Password (Verification)
+                    <input
+                      type="password"
+                      required
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                      placeholder="••••••••••••"
+                      autoComplete="current-password"
+                    />
+                  </label>
+
+                  <label>
+                    New Security Password (min 6 characters)
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      placeholder="••••••••••••"
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <label>
+                    Confirm New Password
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={passwordForm.confirmNewPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmNewPassword: e.target.value })}
+                      placeholder="••••••••••••"
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="glass-btn glass-btn--primary admin-save-btn"
+                    style={{ marginTop: '0.8rem' }}
+                  >
+                    {passwordLoading ? 'Verifying & Updating...' : '✓ Verify & Update Password'}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Account Recovery Info Card */}
+            <div className="admin-card glass-panel" style={{ marginTop: '2rem' }}>
+              <h3>🔐 Password Recovery & Old Password Verification</h3>
+              <p className="admin-subtext">
+                Your portfolio stores a secure history of your past verified passwords. If you ever forget your current password on the login screen, you can click <strong>"Forgot Password?"</strong> to securely recover your account by verifying your registered email and entering any previously known/old password.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 4: DATABASE CONFIG & SECURITY */}
         {/* ========================================================= */}
         {activeTab === 'database' && (
           <div className="admin-db-section">
