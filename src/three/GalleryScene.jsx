@@ -17,7 +17,7 @@ const getLayoutTarget = (layout, index, count) => {
     }
     case 'helix': {
       const a = (idx / count) * Math.PI * 2
-      const y = (idx - (count - 1) / 2) * 1.55
+      const y = (idx - (count - 1) / 2) * 1.6
       return { rx: 0, ry: -a, px: 0, py: -y, pz: layoutZ.helix }
     }
     case 'tunnel': {
@@ -26,10 +26,10 @@ const getLayoutTarget = (layout, index, count) => {
     }
     case 'arc': {
       const t = idx - (count - 1) / 2
-      const px = -t * 2.4
-      const py = -Math.sin(idx * 0.9) * 0.28
-      const ry = t * 0.14
-      return { rx: 0, ry, px, py, pz: layoutZ.arc + Math.abs(t) * 0.45 }
+      const px = -t * 2.9
+      const py = -Math.sin(idx * 0.9) * 0.32
+      const ry = t * 0.17
+      return { rx: 0, ry, px, py, pz: layoutZ.arc + Math.abs(t) * 0.55 }
     }
     case 'wall': {
       const cols = count > 8 ? 5 : (count > 4 ? 4 : Math.max(count, 1))
@@ -63,8 +63,8 @@ function Photo({ item, index, count, layout, activeIndex, mobile, onOpen, onHove
   const born = useRef(null)
   const currentOpacity = useRef(1)
   const { p, r } = useMemo(() => layouts[layout](index, count), [layout, index, count])
-  const h = mobile ? 2.25 : 2.5
-  const w = Math.min(h * item.ratio, mobile ? 3.7 : 4.3)
+  const h = mobile ? 2.5 : 2.85
+  const w = Math.min(h * item.ratio, mobile ? 4.0 : 4.85)
 
   const isActive = index === activeIndex
   const isTunnel = layout === 'tunnel'
@@ -188,7 +188,7 @@ export default function GalleryScene({ items, layout, activeIndex, visible, mobi
       <Canvas
         frameloop={visible ? 'always' : 'never'}
         dpr={[1, mobile ? 1.5 : 2]}
-        camera={{ position: [0, 0, mobile ? 12 : 9.0], fov: 45 }}
+        camera={{ position: [0, 0, mobile ? 11.5 : 8.1], fov: 45 }}
         gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
         aria-hidden="true"
       >
