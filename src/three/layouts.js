@@ -5,12 +5,14 @@ const rand = (i, s) => {
 }
 
 export const layouts = {
-  wall: (i) => {
-    const cols = 4
+  wall: (i, n = 8) => {
+    const cols = n > 8 ? 5 : (n > 4 ? 4 : Math.max(n, 1))
     const c = i % cols
     const r = Math.floor(i / cols)
-    const x = (c - (cols - 1) / 2) * 3.1
-    return { p: [x, (0.5 - r) * 3.1, -Math.abs(x) * 0.25], r: [0, -x * 0.055, 0] }
+    const totalRows = Math.ceil(n / cols)
+    const x = (c - (cols - 1) / 2) * (cols > 4 ? 2.6 : 3.1)
+    const y = ((totalRows - 1) / 2 - r) * 2.9
+    return { p: [x, y, -Math.abs(x) * 0.22], r: [0, -x * 0.05, 0] }
   },
   ring: (i, n) => {
     const a = (i / n) * Math.PI * 2

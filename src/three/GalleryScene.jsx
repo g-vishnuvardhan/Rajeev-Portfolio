@@ -112,7 +112,7 @@ export default function GalleryScene({ items, layout, visible, mobile, onOpen, o
         <Rig key={layout} layout={layout} drag={drag}>
           {items.map((item, i) => (
             <Photo
-              key={`${layout}-${i}-${item.url.length}`}
+              key={`${layout}-${item.url}-${i}`}
               item={item}
               index={i}
               count={items.length}
