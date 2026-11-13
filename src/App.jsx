@@ -8,6 +8,7 @@ import IntroLoader from './components/IntroLoader'
 import Nav from './components/Nav'
 import Hero from './sections/Hero'
 import Gallery from './sections/Gallery'
+import HandledProjects from './sections/HandledProjects'
 import SelectedWorks from './sections/SelectedWorks'
 import About from './sections/About'
 import Expertise from './sections/Expertise'
@@ -53,6 +54,7 @@ export default function App() {
       <main>
         <Hero ready={heroReady} />
         <Gallery />
+        <HandledProjects />
         <SelectedWorks />
         <About />
         <Expertise />

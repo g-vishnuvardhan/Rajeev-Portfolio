@@ -671,6 +671,476 @@ section { position: relative; }
 .lb-prev { left: 1.5rem; top: 50%; transform: translateY(-50%); }
 .lb-next { right: 1.5rem; top: 50%; transform: translateY(-50%); }
 
+/* Handled Projects & Fashion Campaigns (Under Gallery) */
+.handled-projects {
+  position: relative;
+  padding: clamp(5rem, 10vw, 8.5rem) 0 clamp(4rem, 8vw, 7rem);
+  background: radial-gradient(ellipse 90% 70% at 50% 12%, rgba(22, 20, 28, 0.7) 0%, #040406 65%, #020203 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.handled-ambient {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 980px);
+  height: 480px;
+  background: radial-gradient(circle, rgba(234, 218, 196, 0.07) 0%, rgba(200, 150, 100, 0.02) 50%, transparent 75%);
+  pointer-events: none;
+}
+.handled-head {
+  margin-bottom: 2rem;
+}
+.handled-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.handled-badge {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: #f4eee4;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-transform: uppercase;
+}
+.handled-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--tungsten);
+  box-shadow: 0 0 10px rgba(224, 176, 116, 0.75);
+}
+.handled-count {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--grey);
+  text-transform: uppercase;
+}
+.serif-italic {
+  font-style: italic;
+  font-weight: 400;
+  color: #e5dec9;
+}
+
+/* Kinetic Fashion Runway Ribbon */
+.fashion-runway {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 1.1rem 0;
+  margin-bottom: 2.2rem;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+}
+.fashion-track {
+  display: flex;
+  gap: 1.25rem;
+  width: max-content;
+  will-change: transform;
+}
+.runway-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.95rem;
+  padding: 0.65rem 1.45rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.35s ease, border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+}
+.runway-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(244, 238, 228, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+.runway-idx {
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--tungsten);
+  font-weight: 500;
+}
+.runway-logo-box {
+  width: 46px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 5px;
+  padding: 3px 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.runway-logo-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.runway-name {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #f4eee4;
+  letter-spacing: 0.02em;
+}
+.runway-tag {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  color: var(--grey);
+  text-transform: uppercase;
+}
+
+/* Category Filter Tabs */
+.fashion-filters {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0 var(--pad);
+  margin-bottom: 2.2rem;
+}
+.fashion-filter-btn {
+  font-family: var(--sans);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--grey);
+  padding: 0.52rem 1.25rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: color 0.3s, background 0.3s, border-color 0.3s, transform 0.25s;
+}
+.fashion-filter-btn:hover {
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+.fashion-filter-btn.is-active {
+  color: #040406;
+  background: #f4eee4;
+  border-color: #f4eee4;
+  font-weight: 500;
+  box-shadow: 0 4px 18px rgba(244, 238, 228, 0.25);
+}
+
+/* Editorial Project Cards Grid */
+.handled-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: clamp(1.4rem, 2.4vw, 2.2rem);
+  padding: 0 var(--pad);
+}
+.handled-card {
+  position: relative;
+  background: rgba(14, 14, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s ease, box-shadow 0.45s ease;
+}
+.handled-card:hover {
+  transform: translateY(-7px);
+  border-color: rgba(244, 238, 228, 0.38);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.card-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.95rem 1.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: var(--tungsten);
+  text-transform: uppercase;
+}
+.card-year {
+  color: var(--grey);
+}
+.card-emblem-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: radial-gradient(circle at 50% 50%, #161622 0%, #09090e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.card-emblem-stage {
+  width: 82%;
+  height: 72%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1.1rem 1.5rem;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.handled-card:hover .card-emblem-stage {
+  transform: scale(1.05);
+}
+.card-emblem-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.card-tag-floating {
+  position: absolute;
+  bottom: 0.8rem;
+  right: 1rem;
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f4eee4;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(4, 4, 6, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+}
+.card-body {
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.card-category {
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  color: var(--tungsten);
+  margin-bottom: 0.4rem;
+}
+.card-title {
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  font-weight: 500;
+  line-height: 1.15;
+  color: #f4eee4;
+  margin-bottom: 0.65rem;
+}
+.card-desc {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #b8b5af;
+  margin-bottom: 1.1rem;
+}
+.card-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.3rem;
+}
+.card-pill {
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: #cbc8c2;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.card-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: var(--sans);
+}
+.card-scope {
+  font-size: 0.74rem;
+  color: var(--grey);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 62%;
+}
+.card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f4eee4;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+.handled-card:hover .card-action {
+  color: var(--tungsten);
+  transform: translateX(4px);
+}
+
+/* High-Fashion Showcase Quick-View Modal */
+.fashion-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(2, 2, 4, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: grid;
+  place-items: center;
+  padding: var(--pad);
+  animation: modalFadeIn 0.35s ease;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fashion-modal-card {
+  position: relative;
+  width: min(840px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #0d0d12;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.85);
+}
+.fashion-modal-close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f4eee4;
+  font-size: 1rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+.fashion-modal-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: rotate(90deg);
+}
+.fashion-modal-image-wrap {
+  background: radial-gradient(circle at 50% 50%, #1c1c28 0%, #0d0d14 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+.fashion-modal-image-wrap img {
+  max-width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 1.2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.fashion-modal-info {
+  padding: 2.4rem;
+  display: flex;
+  flex-direction: column;
+}
+.fashion-modal-badge {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  color: var(--tungsten);
+  margin-bottom: 0.4rem;
+}
+.fashion-modal-title {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  font-weight: 500;
+  color: #f4eee4;
+  margin-bottom: 0.35rem;
+}
+.fashion-modal-cat {
+  font-size: 0.88rem;
+  color: var(--grey);
+  margin-bottom: 1.1rem;
+}
+.fashion-modal-desc {
+  font-size: 0.94rem;
+  line-height: 1.55;
+  color: #d8d5cf;
+  margin-bottom: 1.5rem;
+}
+.fashion-modal-section {
+  margin-bottom: 1.2rem;
+}
+.fashion-modal-section h4 {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tungsten);
+  margin-bottom: 0.45rem;
+}
+.fashion-modal-meta {
+  font-size: 0.88rem;
+  color: #cbc8c2;
+}
+.fashion-modal-list {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  color: #cbc8c2;
+}
+.fashion-modal-action {
+  margin-top: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .fashion-modal-card {
+    grid-template-columns: 1fr;
+  }
+  .fashion-modal-image-wrap {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.8rem;
+  }
+  .fashion-modal-info {
+    padding: 1.5rem;
+  }
+}
+
 /* Selected Works */
 .works { padding: clamp(4rem, 10vw, 8rem) 0; background: var(--obsidian); }
 .work { margin-bottom: clamp(4rem, 9vw, 8rem); }

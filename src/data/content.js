@@ -15,7 +15,8 @@ export const site = {
 
 export const nav = [
   { id: 'home', label: 'Home' },
-  { id: 'work', label: 'Work' },
+  { id: 'work', label: 'Gallery' },
+  { id: 'projects', label: 'Projects' },
   { id: 'about', label: 'About' },
   { id: 'expertise', label: 'Expertise' },
   { id: 'contact', label: 'Contact' },
