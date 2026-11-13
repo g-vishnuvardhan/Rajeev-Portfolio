@@ -38,12 +38,12 @@ export default function Gallery() {
     setHover(null)
   }
 
-  // Automatic moving of frames every 3.5 seconds
+  // Automatic moving of frames every 2 seconds
   useEffect(() => {
     if (!visible || openIndex !== null || isPaused || items.length === 0) return
     const timer = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % items.length)
-    }, 3500)
+    }, 2000)
     return () => clearInterval(timer)
   }, [visible, openIndex, isPaused, items.length, catId])
 
@@ -134,7 +134,7 @@ export default function Gallery() {
 
         <div className="stage-hint" aria-hidden="true">
           <span className="stage-hint-dot" />
-          <span>{env.mobile ? 'Auto-playing 3.5s · Tap to open' : 'Auto-advancing 3.5s · Click frame to open'}</span>
+          <span>{env.mobile ? 'Auto-playing 2s · Tap to open' : 'Auto-advancing 2s · Click frame to open'}</span>
         </div>
 
         <div className="stage-counter" aria-label={`Frame ${activeIndex + 1} of ${items.length}`}>

@@ -51,58 +51,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   pointer-events: none;
 }
 
-/* Custom Lusion-style Trailing Cursor */
-.cursor-ring {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 280;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(2px);
-  pointer-events: none;
-  display: grid;
-  place-items: center;
-  transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s, background 0.3s;
-}
-.cursor-ring.is-active {
-  width: 52px;
-  height: 52px;
-  border-color: var(--tungsten);
-  background: rgba(224, 176, 116, 0.08);
-}
-.cursor-ring.has-label {
-  width: 72px;
-  height: 72px;
-  border-color: rgba(224, 176, 116, 0.7);
-  background: rgba(8, 8, 12, 0.72);
-  backdrop-filter: blur(10px);
-}
-.cursor-label {
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--white);
-}
-.cursor-dot {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 281;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--tungsten);
-  pointer-events: none;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-.cursor-dot.is-active {
-  transform: translate(-50%, -50%) scale(0.4);
-  opacity: 0.5;
+/* Custom cursor ring and dot disabled */
+.cursor-ring, .cursor-dot {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Magnetic & Lusion Dual-Clone Roll Text */
@@ -620,8 +573,8 @@ section { position: relative; }
 }
 .stage {
   position: relative;
-  height: min(82vh, 770px);
-  min-height: 480px;
+  height: min(84vh, 790px);
+  min-height: 500px;
   margin: 0 var(--pad);
   border-radius: 16px;
   border: 1px solid var(--line);
@@ -706,7 +659,7 @@ section { position: relative; }
   bottom: 0;
   background: var(--tungsten);
   width: 0%;
-  animation: stageProgressBar 3.5s linear infinite;
+  animation: stageProgressBar 2s linear infinite;
 }
 .stage-progress-fill.is-paused {
   animation-play-state: paused;

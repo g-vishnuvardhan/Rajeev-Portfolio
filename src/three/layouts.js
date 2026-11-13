@@ -10,17 +10,17 @@ export const layouts = {
     const c = i % cols
     const r = Math.floor(i / cols)
     const totalRows = Math.ceil(n / cols)
-    const x = (c - (cols - 1) / 2) * (cols > 4 ? 2.6 : 3.1)
-    const y = ((totalRows - 1) / 2 - r) * 2.9
+    const x = (c - (cols - 1) / 2) * (cols > 4 ? 2.8 : 3.3)
+    const y = ((totalRows - 1) / 2 - r) * 3.1
     return { p: [x, y, -Math.abs(x) * 0.22], r: [0, -x * 0.05, 0] }
   },
   ring: (i, n) => {
     const a = (i / n) * Math.PI * 2
-    return { p: [Math.sin(a) * 5.4, 0, Math.cos(a) * 5.4], r: [0, a, 0] }
+    return { p: [Math.sin(a) * 5.8, 0, Math.cos(a) * 5.8], r: [0, a, 0] }
   },
   helix: (i, n) => {
     const a = i * 0.85
-    return { p: [Math.sin(a) * 3.65, (i - (n - 1) / 2) * 1.05, Math.cos(a) * 3.65], r: [0, a, 0] }
+    return { p: [Math.sin(a) * 3.85, (i - (n - 1) / 2) * 1.15, Math.cos(a) * 3.85], r: [0, a, 0] }
   },
   scatter: (i) => ({
     p: [(rand(i, 1) - 0.5) * 10.5, (rand(i, 2) - 0.5) * 5.4, (rand(i, 3) - 0.5) * 6],
@@ -32,7 +32,7 @@ export const layouts = {
   }),
   arc: (i, n) => {
     const t = i - (n - 1) / 2
-    return { p: [t * 2.55, Math.sin(i * 0.9) * 0.32, -Math.abs(t) * 0.88], r: [0, -t * 0.17, 0] }
+    return { p: [t * 2.75, Math.sin(i * 0.9) * 0.32, -Math.abs(t) * 0.88], r: [0, -t * 0.17, 0] }
   },
   orbit: (i, n) => {
     const ring = i % 2
@@ -49,4 +49,4 @@ export const layouts = {
 }
 
 // Base z offset of the whole group per layout
-export const layoutZ = { wall: 0, ring: -5.3, helix: -3.2, scatter: 0, tunnel: 2, arc: 0.1, orbit: -4.4, cascade: 1 }
+export const layoutZ = { wall: 0, ring: -5.6, helix: -3.4, scatter: 0, tunnel: 2, arc: 0.1, orbit: -4.4, cascade: 1 }

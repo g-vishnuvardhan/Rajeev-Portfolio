@@ -24,21 +24,13 @@ export const nav = [
 // Hero background. Set src to a photo URL (e.g. '/photos/hero.jpg') or a video ('/photos/hero.mp4').
 export const heroMedia = { type: 'image', src: '/photos/hero-rajeev.jpg' }
 
-// Floating frames in the hero. Set src to '/photos/hero-1.jpg' etc. to use real photographs.
-export const heroFrames = [
-  { src: null, ratio: 0.8, pos: [-5.4, 1.3, -1.5], rot: [0, 0.4, 0.03], speed: 0.5 },
-  { src: null, ratio: 1.6, pos: [5.2, 1.6, -2.5], rot: [0, -0.4, -0.03], speed: 0.4 },
-  { src: null, ratio: 0.8, pos: [-3.2, -2.2, 0.5], rot: [0, 0.25, -0.04], speed: 0.6 },
-  { src: null, ratio: 1.2, pos: [3.6, -2.0, 0.2], rot: [0, -0.3, 0.05], speed: 0.55 },
-  { src: null, ratio: 0.8, pos: [0.4, 3.0, -4], rot: [0, 0, 0.02], speed: 0.35 },
-  { src: null, ratio: 1.6, pos: [-7.2, -1.2, -4], rot: [0, 0.6, 0], speed: 0.3 },
-  { src: null, ratio: 0.8, pos: [7.4, -0.8, -4.5], rot: [0, -0.6, 0], speed: 0.45 },
-]
+// Floating frames in the hero. Empty to ensure zero placeholder frames appear.
+export const heroFrames = []
 
 export const about = {
   quote: 'Every frame tells a story. Every light creates a mood. Every movement brings a vision to life.',
   titleLine: 'Director of Photography | Cinematographer | Photographer',
-  photo: null, // '/photos/rajeev-portrait.jpg'
+  photo: '/photos/about-rajeev.jpg',
   profile: [
     'Visual-driven Director of Photography and Cinematographer with 4 years of practical experience across commercial, fashion, portrait and creative productions.',
     'Skilled in camera operation, cinematic lighting, framing, lens selection, camera movement and visual storytelling.',

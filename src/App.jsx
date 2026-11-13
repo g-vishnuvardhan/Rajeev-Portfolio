@@ -3,13 +3,11 @@ import { detectEnv, EnvContext } from './lib/env'
 import { gsap, ScrollTrigger } from './lib/useGsap'
 import { initSmooth, startScroll, stopScroll } from './lib/smooth'
 import AmbientCanvas from './components/AmbientCanvas'
-import Cursor from './components/Cursor'
 import IntroLoader from './components/IntroLoader'
 import Nav from './components/Nav'
 import Hero from './sections/Hero'
 import Gallery from './sections/Gallery'
 import HandledProjects from './sections/HandledProjects'
-import SelectedWorks from './sections/SelectedWorks'
 import About from './sections/About'
 import Contact from './sections/Contact'
 
@@ -43,14 +41,12 @@ export default function App() {
     <EnvContext.Provider value={env}>
       <a className="skip" href="#work">Skip to gallery</a>
       <AmbientCanvas />
-      <Cursor />
       {!env.reduced && <IntroLoader reduced={env.reduced} onComplete={handleIntroComplete} />}
       <Nav ready={heroReady} />
       <main>
         <Hero ready={heroReady} />
         <Gallery />
         <HandledProjects />
-        <SelectedWorks />
         <About />
         <Contact />
       </main>

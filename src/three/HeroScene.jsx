@@ -1,26 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
-import { heroFrames } from '../data/content'
-import { resolveSrc } from '../lib/placeholder'
-
-function Frame({ frame, url }) {
-  const tex = useTexture(url)
-  const ref = useRef()
-  const h = 2.4
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime
-    ref.current.position.y = frame.pos[1] + Math.sin(t * frame.speed + frame.pos[0]) * 0.18
-    ref.current.rotation.z = frame.rot[2] + Math.sin(t * frame.speed * 0.7) * 0.015
-  })
-  return (
-    <mesh ref={ref} position={frame.pos} rotation={frame.rot}>
-      <planeGeometry args={[h * frame.ratio, h]} />
-      <meshBasicMaterial map={tex} toneMapped={false} transparent opacity={0.7} side={THREE.DoubleSide} />
-    </mesh>
-  )
-}
 
 function Dust({ count }) {
   const ref = useRef()
@@ -56,13 +36,6 @@ function Rig() {
   return null
 }
 
-function Frames({ mobile }) {
-  const list = mobile ? heroFrames.slice(0, 4) : heroFrames
-  const urls = list.map((f, i) => resolveSrc(f.src, i, f.ratio, 'Hero frame placeholder'))
-  const textures = useTexture(urls)
-  return list.map((f, i) => <Frame key={i} frame={f} url={urls[i]} tex={textures[i]} />)
-}
-
 export default function HeroScene({ mobile, visible }) {
   return (
     <Canvas
@@ -74,7 +47,6 @@ export default function HeroScene({ mobile, visible }) {
       aria-hidden="true"
     >
       <fog attach="fog" args={['#050505', 7, 17]} />
-      <Frames mobile={mobile} />
       <Dust count={mobile ? 120 : 320} />
       <Rig />
     </Canvas>

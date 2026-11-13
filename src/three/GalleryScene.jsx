@@ -38,8 +38,8 @@ const getLayoutTarget = (layout, index, count) => {
       const c = idx % cols
       const r = Math.floor(idx / cols)
       const totalRows = Math.ceil(count / cols)
-      const x = (c - (cols - 1) / 2) * (cols > 4 ? 2.6 : 3.1)
-      const y = ((totalRows - 1) / 2 - r) * 2.9
+      const x = (c - (cols - 1) / 2) * (cols > 4 ? 2.8 : 3.3)
+      const y = ((totalRows - 1) / 2 - r) * 3.1
       return { rx: 0, ry: 0, px: -x * 0.5, py: -y * 0.5, pz: layoutZ.wall + 0.3 }
     }
     case 'scatter': {
@@ -64,8 +64,8 @@ function Photo({ item, index, count, layout, activeIndex, mobile, onOpen, onHove
   const hovered = useRef(false)
   const born = useRef(null)
   const { p, r } = useMemo(() => layouts[layout](index, count), [layout, index, count])
-  const h = mobile ? 2.2 : 2.45
-  const w = Math.min(h * item.ratio, mobile ? 3.4 : 3.8)
+  const h = mobile ? 2.5 : 2.85
+  const w = Math.min(h * item.ratio, mobile ? 3.9 : 4.4)
 
   const isActive = index === activeIndex
 
@@ -124,13 +124,13 @@ function Rig({ layout, activeIndex, count, children }) {
     // Shortest angular difference for seamless forward carousel wrap
     let dy = target.ry - currentRy.current
     dy = Math.atan2(Math.sin(dy), Math.cos(dy))
-    currentRy.current += dy * 0.045
+    currentRy.current += dy * 0.075
 
     g.current.rotation.y = currentRy.current + pointer.x * 0.12
-    g.current.rotation.x = lerp(g.current.rotation.x, target.rx - pointer.y * 0.08, 0.045)
-    g.current.position.x = lerp(g.current.position.x, target.px, 0.045)
-    g.current.position.y = lerp(g.current.position.y, target.py, 0.045)
-    g.current.position.z = lerp(g.current.position.z, target.pz, 0.045)
+    g.current.rotation.x = lerp(g.current.rotation.x, target.rx - pointer.y * 0.08, 0.075)
+    g.current.position.x = lerp(g.current.position.x, target.px, 0.075)
+    g.current.position.y = lerp(g.current.position.y, target.py, 0.075)
+    g.current.position.z = lerp(g.current.position.z, target.pz, 0.075)
   })
 
   return <group ref={g}>{children}</group>
@@ -142,7 +142,7 @@ export default function GalleryScene({ items, layout, activeIndex, visible, mobi
       <Canvas
         frameloop={visible ? 'always' : 'never'}
         dpr={[1, mobile ? 1.5 : 2]}
-        camera={{ position: [0, 0, mobile ? 12 : 8.0], fov: 45 }}
+        camera={{ position: [0, 0, mobile ? 12 : 8.2], fov: 45 }}
         gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
         aria-hidden="true"
       >
