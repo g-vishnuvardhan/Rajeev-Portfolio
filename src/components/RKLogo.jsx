@@ -1,50 +1,36 @@
-export default function RKLogo({ size = 'md', className = '', showProgress = false }) {
+export default function RKLogo({ size = 'md', className = '' }) {
   return (
     <span className={`rk-mark rk-mark--${size} ${className}`.trim()} aria-hidden="true">
       <svg className="rk-frame" viewBox="0 0 120 120" fill="none">
-        {/* Subtle inner tick ring */}
+        <defs>
+          <radialGradient id="rkAuraGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.22" />
+            <stop offset="45%" stopColor="#ffffff" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Ethereal infinite aura halo */}
         <circle
-          className="rk-ticks"
+          className="rk-aura-glow"
           cx="60"
           cy="60"
-          r="46"
-          stroke="currentColor"
-          strokeWidth="0.75"
-          strokeOpacity="0.28"
-          strokeDasharray="2 6"
+          r="54"
+          fill="url(#rkAuraGrad)"
         />
-        {/* Base orbital ring */}
+
+        {/* Minimalist optical lens hairline */}
         <circle
           className="rk-ring"
           cx="60"
           cy="60"
-          r="53"
+          r="52"
           stroke="currentColor"
-          strokeWidth="0.8"
-          strokeOpacity="0.25"
-        />
-        {/* Animated orbital progress arc (used in IntroLoader & hover) */}
-        {showProgress && (
-          <circle
-            className="rk-ring-progress"
-            cx="60"
-            cy="60"
-            r="53"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            transform="rotate(-90 60 60)"
-          />
-        )}
-        {/* Viewfinder corner brackets */}
-        <path
-          className="rk-bracket"
-          d="M20 33V20H33 M87 20H100V33 M100 87V100H87 M33 100H20V87"
-          stroke="currentColor"
-          strokeWidth="1.15"
-          strokeLinecap="square"
+          strokeWidth="0.85"
+          strokeOpacity="0.4"
         />
       </svg>
+
       <span className="rk-letters">
         <span className="rk-r">R</span>
         <span className="rk-k">K</span>
