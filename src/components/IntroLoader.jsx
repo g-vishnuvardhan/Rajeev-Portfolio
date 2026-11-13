@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from '../lib/useGsap'
 import { heroMedia, site } from '../data/content'
-import { signatureVectorPath, signatureMaskStrokes, signatureViewBox } from '../data/signatureData'
+import { signatureStrokes, signatureViewBox } from '../data/signatureData'
 
 export default function IntroLoader({ reduced, onComplete }) {
   const root = useRef(null)
@@ -33,68 +33,62 @@ export default function IntroLoader({ reduced, onComplete }) {
     const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve()
 
     const ctx = gsap.context(() => {
-      const strokes = el.querySelectorAll('.intro-mask-stroke')
+      const strokes = el.querySelectorAll('.intro-hello-stroke')
       const crosses = el.querySelectorAll('.intro-cross')
       const stage = stageRef.current
-      const signBase = el.querySelector('.intro-sign-base')
 
-      // Measure and hide each handwriting mask stroke initially
+      // Measure exact path lengths and hide each stroke initially (Apple "hello" technique)
       strokes.forEach((stroke) => {
         const len = stroke.getTotalLength()
-        gsap.set(stroke, { strokeDasharray: len + 4, strokeDashoffset: len + 4 })
+        gsap.set(stroke, { strokeDasharray: len + 1, strokeDashoffset: len + 1 })
       })
 
-      // Precision corner crosshairs subtle rotation
+      // Crosshairs subtle smooth rotation
       gsap.to(crosses, { rotation: 180, duration: 2.2, ease: 'power2.inOut', stagger: 0.08 })
 
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
 
-      // 1. Crosshairs & warm ambient aura bloom
+      // 1. Crosshairs & subtle ambient backdrop bloom
       tl.fromTo(crosses, { scale: 0, opacity: 0 }, { scale: 1, opacity: 0.35, duration: 0.6, stagger: 0.06, ease: 'back.out(1.7)' }, 0)
-        .fromTo(['.intro-glow', '.intro-aura'], { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, ease: 'power2.out' }, 0.05)
+        .fromTo('.intro-glow', { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, ease: 'power2.out' }, 0.05)
 
-      // 2. Writing animation — authentic calligraphic handwriting stroke sequence
-      // Stroke 1: R cursive arch and bottom loop
+      // 2. Apple "hello" style continuous fluid handwriting animation
+      // Stroke 1: R Primary Diagonal Slash (dynamic backbone)
       if (strokes[0]) {
-        tl.to(strokes[0], { strokeDashoffset: 0, duration: 0.95, ease: 'power1.inOut' }, 0.15)
+        tl.to(strokes[0], { strokeDashoffset: 0, duration: 0.42, ease: 'power2.out' }, 0.15)
       }
-      // Stroke 2: R dynamic downward slash
+      // Stroke 2: R Cursive Arch, Upper Bowl, and DOWNWARD Tail (unmistakable R, not P!)
       if (strokes[1]) {
-        tl.to(strokes[1], { strokeDashoffset: 0, duration: 0.38, ease: 'power2.out' }, 0.72)
+        tl.to(strokes[1], { strokeDashoffset: 0, duration: 0.85, ease: 'power1.inOut' }, 0.52)
       }
-      // Stroke 3: K vertical stem slash
+      // Stroke 3: K Italic Stem Slash
       if (strokes[2]) {
-        tl.to(strokes[2], { strokeDashoffset: 0, duration: 0.42, ease: 'power2.out' }, 1.02)
+        tl.to(strokes[2], { strokeDashoffset: 0, duration: 0.42, ease: 'power2.out' }, 1.32)
       }
-      // Stroke 4: K upper diagonal branch
+      // Stroke 4: K Upper Diagonal Arm
       if (strokes[3]) {
-        tl.to(strokes[3], { strokeDashoffset: 0, duration: 0.28, ease: 'power2.out' }, 1.34)
+        tl.to(strokes[3], { strokeDashoffset: 0, duration: 0.28, ease: 'power2.out' }, 1.68)
       }
-      // Stroke 5: K lower loop & majestic flourish underline
+      // Stroke 5: K Lower Arm & Majestic Underline Flourish gliding across to the right
       if (strokes[4]) {
-        tl.to(strokes[4], { strokeDashoffset: 0, duration: 0.82, ease: 'power2.out' }, 1.50)
+        tl.to(strokes[4], { strokeDashoffset: 0, duration: 0.78, ease: 'power2.out' }, 1.88)
       }
 
-      // Ensure 100% full vector fidelity once writing strokes complete
-      tl.call(() => {
-        if (signBase) signBase.removeAttribute('mask')
-      }, [], 2.22)
-
-      // 3. Typography: RAJEEV KUMAR on top, DIRECTOR OF PHOTOGRAPHY below
+      // 3. Typographic reveal: RAJEEV KUMAR on top, DIRECTOR OF PHOTOGRAPHY below
       tl.fromTo(
         '.intro-name',
         { y: 14, opacity: 0, letterSpacing: '0.22em' },
         { y: 0, opacity: 1, letterSpacing: '0.38em', duration: 0.75, ease: 'power3.out' },
-        2.12
+        2.45
       )
       tl.fromTo(
         '.intro-role',
         { y: 10, opacity: 0, letterSpacing: '0.18em' },
         { y: 0, opacity: 0.85, letterSpacing: '0.28em', duration: 0.75, ease: 'power3.out' },
-        2.34
+        2.68
       )
 
-      // Hold briefly so user enjoys the complete cinematic title card
+      // Hold briefly so user enjoys the completed signature title card
       Promise.all([
         preloadHero,
         fontsReady,
@@ -129,7 +123,7 @@ export default function IntroLoader({ reduced, onComplete }) {
               scale: 5.4,
               z: 600,
               opacity: 0,
-              filter: 'blur(22px)',
+              filter: 'blur(20px)',
               duration: 1.15,
               ease: 'power3.in',
               transformOrigin: '50% 45%',
@@ -170,38 +164,18 @@ export default function IntroLoader({ reduced, onComplete }) {
 
       <div className="intro-stage" ref={stageRef}>
         <div className="intro-sign-wrap">
-          <svg className="intro-sign-svg" viewBox={signatureViewBox} fill="none">
-            <defs>
-              <mask id="introSignMask" maskUnits="userSpaceOnUse" x="-50" y="-50" width="615" height="345">
-                <rect x="-50" y="-50" width="615" height="345" fill="black" />
-                {signatureMaskStrokes.map((d, i) => (
-                  <path
-                    key={i}
-                    className={`intro-mask-stroke intro-mask-stroke--${i + 1}`}
-                    d={d}
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="32"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))}
-              </mask>
-              <radialGradient id="introAuraGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#f4eee4" stopOpacity="0.22" />
-                <stop offset="50%" stopColor="#f4eee4" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="#f4eee4" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-
-            <ellipse cx="257" cy="122" rx="230" ry="110" fill="url(#introAuraGrad)" className="intro-aura" />
-
-            <path
-              className="intro-sign-base"
-              d={signatureVectorPath}
-              fill="#f4eee4"
-              mask="url(#introSignMask)"
-            />
+          <svg className="intro-hello-svg" viewBox={signatureViewBox} fill="none">
+            {signatureStrokes.map((d, i) => (
+              <path
+                key={i}
+                className={`intro-hello-stroke intro-hello-stroke--${i + 1}`}
+                d={d}
+                stroke="#f4eee4"
+                strokeWidth="4.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
           </svg>
         </div>
 
