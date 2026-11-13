@@ -83,9 +83,9 @@ export default function App() {
             <Nav ready={heroReady} />
             <main>
               <Hero ready={heroReady} />
+              <About />
               <Gallery />
               <HandledProjects />
-              <About />
               <Contact />
             </main>
           </>
