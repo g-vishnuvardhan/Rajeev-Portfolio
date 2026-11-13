@@ -16,16 +16,15 @@ const getLayoutTarget = (layout, index, count) => {
       return { rx: 0, ry: -a, px: 0, py: 0, pz: layoutZ.ring }
     }
     case 'helix': {
-      const a = idx * 0.78
-      const y = (idx - (count - 1) / 2) * 1.35
+      const a = (idx / count) * Math.PI * 2
+      const y = (idx - (count - 1) / 2) * 1.6
       return { rx: 0, ry: -a, px: 0, py: -y, pz: layoutZ.helix }
     }
     case 'tunnel': {
+      const side = idx % 2 === 0 ? -1 : 1
+      const px = -side * 2.2
       const pz = idx * 3.2
-      const px = -Math.sin(idx * 1.3) * 2.8
-      const py = -Math.cos(idx * 1.7) * 1.3
-      const ry = Math.sin(idx * 1.3) * 0.3
-      return { rx: 0, ry, px, py, pz: layoutZ.tunnel + pz }
+      return { rx: 0, ry: 0, px, py: 0, pz: layoutZ.tunnel + pz }
     }
     case 'arc': {
       const t = idx - (count - 1) / 2
@@ -75,13 +74,19 @@ function Photo({ item, index, count, layout, activeIndex, mobile, onOpen, onHove
     if (born.current === null) born.current = t
     const k = Math.min(1, Math.max(0, (t - born.current - index * 0.07) / 0.9))
     const ease = 1 - Math.pow(1 - k, 3)
-    const scaleFactor = hovered.current ? 1.12 : (isActive ? 1.07 : 0.96)
+    const scaleFactor = hovered.current ? 1.14 : (isActive ? 1.08 : 0.84)
     const target = scaleFactor * ease
     mesh.current.scale.setScalar(lerp(mesh.current.scale.x, Math.max(target, 0.001), 0.12))
-    mesh.current.position.y = p[1] + Math.sin(t * 0.6 + index) * 0.05
-    const targetZ = p[2] + (isActive ? 0.35 : 0)
+    mesh.current.position.y = p[1] + Math.sin(t * 0.6 + index) * 0.04
+    const targetZ = p[2] + (isActive ? (layout === 'helix' ? 1.4 : 0.8) : 0)
     mesh.current.position.z = lerp(mesh.current.position.z, targetZ, 0.1)
-    const targetBrightness = hovered.current || isActive ? 1.0 : 0.68
+
+    if (layout === 'tunnel') {
+      const targetRy = isActive ? 0 : r[1]
+      mesh.current.rotation.y = lerp(mesh.current.rotation.y, targetRy, 0.1)
+    }
+
+    const targetBrightness = hovered.current || isActive ? 1.0 : 0.55
     const c = lerp(mat.current.color.r, targetBrightness, 0.12)
     mat.current.color.setScalar(c)
   })
@@ -127,9 +132,13 @@ function Rig({ layout, activeIndex, count, children }) {
     dy = Math.atan2(Math.sin(dy), Math.cos(dy))
     currentRy.current += dy * 0.075
 
-    g.current.rotation.y = currentRy.current + pointer.x * 0.12
-    g.current.rotation.x = lerp(g.current.rotation.x, target.rx - pointer.y * 0.08, 0.075)
-    g.current.position.x = lerp(g.current.position.x, target.px, 0.075)
+    const isTunnel = layout === 'tunnel'
+    const pointerRy = isTunnel ? 0 : pointer.x * 0.12
+    const pointerPx = isTunnel ? pointer.x * 0.35 : 0
+
+    g.current.rotation.y = currentRy.current + pointerRy
+    g.current.rotation.x = lerp(g.current.rotation.x, target.rx - (isTunnel ? 0 : pointer.y * 0.08), 0.075)
+    g.current.position.x = lerp(g.current.position.x, target.px + pointerPx, 0.075)
     g.current.position.y = lerp(g.current.position.y, target.py, 0.075)
     g.current.position.z = lerp(g.current.position.z, target.pz, 0.075)
   })
@@ -147,7 +156,7 @@ export default function GalleryScene({ items, layout, activeIndex, visible, mobi
         gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
         aria-hidden="true"
       >
-        <fog attach="fog" args={['#040407', 9, 23]} />
+        <fog attach="fog" args={['#040407', 12, 42]} />
         <Rig key={layout} layout={layout} activeIndex={activeIndex} count={items.length}>
           {items.map((item, i) => (
             <Photo
