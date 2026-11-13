@@ -95,25 +95,25 @@ export default function Contact() {
 
       <footer className="closing-contact">
         <div className="closing-contact-grid">
-          <div className="closing-contact-item">
+          <div className="closing-contact-item closing-contact-item--phone">
             <span className="closing-contact-label">Direct Phone</span>
             <a href={site.phoneHref} className="closing-contact-link">
               <RollText text={site.phone} />
             </a>
           </div>
-          <div className="closing-contact-item">
+          <div className="closing-contact-item closing-contact-item--email">
             <span className="closing-contact-label">Direct Email</span>
             <a href={`mailto:${site.email}`} className="closing-contact-link">
               <RollText text={site.email} />
             </a>
           </div>
-          <div className="closing-contact-item">
+          <div className="closing-contact-item closing-contact-item--whatsapp">
             <span className="closing-contact-label">WhatsApp</span>
             <a href={site.whatsapp} target="_blank" rel="noopener noreferrer" className="closing-contact-link">
               <RollText text="WhatsApp Direct" />
             </a>
           </div>
-          <div className="closing-contact-item">
+          <div className="closing-contact-item closing-contact-item--instagram">
             <span className="closing-contact-label">Instagram</span>
             {site.instagram ? (
               <a href={site.instagram} target="_blank" rel="noopener noreferrer" className="closing-contact-link">
@@ -123,7 +123,7 @@ export default function Contact() {
               <span className="closing-contact-link muted">Available on request</span>
             )}
           </div>
-          <div className="closing-contact-item">
+          <div className="closing-contact-item closing-contact-item--location">
             <span className="closing-contact-label">Base Location</span>
             <p className="closing-contact-val">{site.fullLocation}</p>
           </div>

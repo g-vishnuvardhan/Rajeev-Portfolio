@@ -620,12 +620,12 @@ section { position: relative; }
 }
 .stage {
   position: relative;
-  height: min(82vh, 760px);
-  min-height: 460px;
+  height: min(86vh, 820px);
+  min-height: 540px;
   margin: 0 var(--pad);
   border-radius: 16px;
   border: 1px solid var(--line);
-  background: radial-gradient(65% 65% at 50% 42%, #111118 0%, #050508 100%);
+  background: radial-gradient(65% 65% at 50% 46%, #12121a 0%, #040407 100%);
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
@@ -1531,17 +1531,25 @@ blockquote { margin: 0; }
   z-index: 10;
 }
 .closing-contact-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: clamp(1.8rem, 3.5vw, 3rem);
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   padding-bottom: clamp(2.5rem, 5vw, 3.5rem);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .closing-contact-item {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.45rem;
+  min-width: 160px;
+}
+.closing-contact-item--email {
+  min-width: min(340px, 100%);
+  flex: 1 1 320px;
 }
 .closing-contact-label {
   font-size: 0.72rem;
@@ -1552,10 +1560,11 @@ blockquote { margin: 0; }
 }
 .closing-contact-link,
 .closing-contact-val {
-  font-size: 1.05rem;
+  font-size: clamp(0.92rem, 1.15vw, 1.05rem);
   color: var(--white);
   text-decoration: none;
   transition: color 0.3s ease;
+  word-break: break-word;
 }
 .closing-contact-link:hover {
   color: var(--tungsten);

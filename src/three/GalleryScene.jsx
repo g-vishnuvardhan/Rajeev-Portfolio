@@ -6,15 +6,15 @@ import { layouts, layoutZ } from './layouts'
 
 const { lerp } = THREE.MathUtils
 
-function Photo({ item, index, count, layout, drag, onOpen, onHover }) {
+function Photo({ item, index, count, layout, drag, mobile, onOpen, onHover }) {
   const tex = useTexture(item.url)
   const mesh = useRef()
   const mat = useRef()
   const hovered = useRef(false)
   const born = useRef(null)
   const { p, r } = useMemo(() => layouts[layout](index, count), [layout, index, count])
-  const h = 2.1
-  const w = Math.min(h * item.ratio, 3.3)
+  const h = mobile ? 2.8 : 3.5
+  const w = Math.min(h * item.ratio, mobile ? 4.2 : 5.4)
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime
@@ -104,11 +104,11 @@ export default function GalleryScene({ items, layout, visible, mobile, onOpen, o
       <Canvas
         frameloop={visible ? 'always' : 'never'}
         dpr={[1, mobile ? 1.5 : 2]}
-        camera={{ position: [0, 0, mobile ? 13 : 8], fov: 45 }}
+        camera={{ position: [0, 0, mobile ? 11 : 7.2], fov: 45 }}
         gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
         aria-hidden="true"
       >
-        <fog attach="fog" args={['#050505', 9, 22]} />
+        <fog attach="fog" args={['#040407', 10, 25]} />
         <Rig key={layout} layout={layout} drag={drag}>
           {items.map((item, i) => (
             <Photo
@@ -118,6 +118,7 @@ export default function GalleryScene({ items, layout, visible, mobile, onOpen, o
               count={items.length}
               layout={layout}
               drag={drag}
+              mobile={mobile}
               onOpen={onOpen}
               onHover={onHover}
             />
