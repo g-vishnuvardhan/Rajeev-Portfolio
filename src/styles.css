@@ -1686,248 +1686,460 @@ blockquote { margin: 0; }
   color: #ffffff;
 }
 
-/* Account Recovery Options on Login Screen */
-.admin-recovery-options {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: -0.2rem;
+/* Google Authentication & Verification Container */
+.google-auth-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
 }
 
-.admin-otp-recovery-btn {
+.google-signin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+}
+
+.google-signin-btn:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(66, 133, 244, 0.3);
+}
+
+.google-quick-accounts-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+}
+
+.quick-acc-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--grey);
+}
+
+.quick-acc-btns {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.quick-acc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(66, 133, 244, 0.12);
+  border: 1px solid rgba(66, 133, 244, 0.35);
+  color: #93c5fd;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-acc-chip:hover {
+  background: rgba(66, 133, 244, 0.22);
+  border-color: #60a5fa;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.quick-acc-dot {
+  font-size: 0.65rem;
+  color: #4ade80;
+}
+
+/* Auth Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.25rem 0 1.5rem;
+  color: var(--grey);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.auth-divider span {
+  padding: 0 0.85rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+
+/* Google Badge Pill */
+.google-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(66, 133, 244, 0.12);
+  border: 1px solid rgba(66, 133, 244, 0.35);
+  color: #93c5fd;
+  font-size: 0.74rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+/* Google Steps Navigation */
+.google-steps-nav {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  padding: 0.75rem 1rem;
-  border-radius: 9px;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(14, 165, 233, 0.06));
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #e0f2fe;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-align: left;
-}
-
-.admin-otp-recovery-btn:hover {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(14, 165, 233, 0.14));
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
-  transform: translateY(-1px);
-}
-
-.admin-otp-recovery-btn strong {
-  color: #38bdf8;
-}
-
-/* OTP Steps Indicator */
-.otp-steps-indicator {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
 }
 
-.otp-step-pill {
-  font-size: 0.72rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.google-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
   color: var(--grey);
-  transition: all 0.2s ease;
 }
 
-.otp-step-pill.is-active {
-  background: rgba(56, 189, 248, 0.18);
-  border-color: #38bdf8;
-  color: #38bdf8;
+.google-step-item.is-active {
+  color: #93c5fd;
   font-weight: 600;
 }
 
-/* Realistic SMS / Push Toast Notification */
-.otp-sms-banner {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.98));
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  border-radius: 12px;
-  padding: 1.1rem 1.25rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 20px rgba(56, 189, 248, 0.15);
-  animation: slideDownToast 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+.google-step-item.is-done {
+  color: #4ade80;
 }
 
-@keyframes slideDownToast {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.otp-sms-header {
-  display: flex;
+.step-num {
+  display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 0.5rem;
-}
-
-.otp-sms-icon {
-  font-size: 1.15rem;
-}
-
-.otp-sms-title-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  font-size: 0.76rem;
-  color: #94a3b8;
-  letter-spacing: 0.06em;
-}
-
-.otp-sms-time {
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
   font-size: 0.7rem;
-  color: #64748b;
 }
 
-.otp-sms-body {
-  font-size: 0.92rem;
-  color: #f8fafc;
+.is-active .step-num {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.is-done .step-num {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.step-connector {
+  width: 28px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Google Recovery Card & Whitelist Picker */
+.google-recovery-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.google-whitelist-notice {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 12px;
+  padding: 1.1rem;
+}
+
+.whitelist-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.35rem;
+}
+
+.whitelist-desc {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-bottom: 0.85rem;
   line-height: 1.45;
-  margin: 0.35rem 0;
 }
 
-.otp-sms-code {
-  font-family: var(--mono);
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.15);
-  padding: 0.15rem 0.55rem;
-  border-radius: 6px;
+.google-account-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.otp-sms-actions {
+.google-account-option {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-top: 0.85rem;
-  flex-wrap: wrap;
-}
-
-.otp-autofill-btn {
-  background: #38bdf8;
-  color: #020617;
-  font-weight: 600;
-  font-size: 0.8rem;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 7px;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
 }
 
-.otp-autofill-btn:hover {
-  background: #7dd3fc;
+.google-account-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.google-account-option.is-selected {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: #3b82f6;
+}
+
+.google-account-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.account-email {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: #f8fafc;
+  word-break: break-all;
+}
+
+.account-tag {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.google-check-icon {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.custom-google-input-box {
+  margin-top: 0.75rem;
+}
+
+.admin-input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.google-verify-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.95rem 1.2rem;
+  background: #ffffff;
+  color: #111827;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 9px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.google-verify-submit-btn:hover:not(:disabled) {
+  background: #f1f5f9;
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(66, 133, 244, 0.35);
 }
 
-.otp-whatsapp-btn {
-  background: rgba(37, 211, 102, 0.15);
-  color: #4ade80;
-  border: 1px solid rgba(37, 211, 102, 0.35);
-  font-size: 0.8rem;
-  padding: 0.5rem 0.95rem;
-  border-radius: 7px;
-  text-decoration: none;
-  transition: all 0.2s ease;
+.google-verify-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
-.otp-whatsapp-btn:hover {
-  background: rgba(37, 211, 102, 0.25);
-  color: #86efac;
-}
-
-.otp-helper-badge {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: -0.4rem;
-  font-size: 0.74rem;
-  color: var(--grey);
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.otp-input-large {
-  font-family: var(--mono) !important;
-  font-size: 1.55rem !important;
-  letter-spacing: 0.45em !important;
-  text-align: center !important;
-  font-weight: 700 !important;
-  padding: 0.85rem !important;
-  border-color: rgba(56, 189, 248, 0.4) !important;
-  background: rgba(56, 189, 248, 0.05) !important;
-}
-
-.otp-input-large:focus {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25) !important;
-}
-
-.otp-timer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: -0.3rem;
+.google-magic-link-box {
+  text-align: center;
   font-size: 0.76rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.otp-countdown {
   color: var(--grey);
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
-.otp-countdown strong {
-  color: #38bdf8;
-}
-
-.otp-account-found-box {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.35);
+/* Verified Google Session Card */
+.google-verified-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.06));
+  border: 1px solid rgba(16, 185, 129, 0.35);
   border-radius: 10px;
   padding: 1.1rem;
-  margin-bottom: 0.75rem;
-}
-
-.account-found-badge {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #4ade80;
-  background: rgba(34, 197, 94, 0.18);
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
   margin-bottom: 0.5rem;
 }
 
-.account-found-email {
-  font-size: 0.95rem;
-  color: #ffffff;
-  margin: 0.2rem 0 0.4rem;
+.verified-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
 }
 
-.account-found-email strong {
-  color: #4ade80;
+.verified-shield {
+  font-size: 1.4rem;
 }
 
-.account-found-desc {
+.verified-head strong {
+  display: block;
+  font-size: 0.92rem;
+  color: #34d399;
+}
+
+.verified-email {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: #a7f3d0;
+}
+
+.verified-desc {
   font-size: 0.78rem;
   color: #94a3b8;
   margin: 0;
   line-height: 1.4;
+}
+
+/* Nav user badge */
+.admin-nav-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.admin-nav-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+/* Dashboard Security Tab: Google Status */
+.google-status-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.google-status-head h3 {
+  margin-bottom: 0.2rem;
+}
+
+.google-authorized-list-box {
+  margin-top: 1.25rem;
+}
+
+.authorized-list-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--grey);
+  margin-bottom: 0.75rem;
+}
+
+.authorized-accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.authorized-account-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+}
+
+.acc-icon-wrap {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.acc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.acc-info strong {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: #f1f5f9;
+}
+
+.acc-info span {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.acc-status-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
 }
 
 /* Account Security Tab: Recovery Mobile Card */

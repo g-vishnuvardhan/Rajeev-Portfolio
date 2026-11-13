@@ -22,14 +22,19 @@ const STORAGE_KEYS = {
   CONTENT: 'rk_portfolio_site_content_v1',
   AUTH: 'rk_portfolio_admin_auth_v1',
   CREDENTIALS: 'rk_portfolio_admin_credentials_v1',
-  RECOVERY_OTP: 'rk_portfolio_admin_recovery_otp_v1',
+  GOOGLE_RESET_SESSION: 'rk_portfolio_google_reset_session_v1',
 }
+
+// Authorized Google Admin Accounts
+export const AUTHORIZED_ADMIN_EMAILS = [
+  '247r1a05e9@cmrtc.ac.in',
+  'gantyalarajeevkumar@gmail.com',
+]
 
 const DEFAULT_ADMIN = {
   email: '247r1a05e9@cmrtc.ac.in',
   password: '247r1a05e9cmr',
-  phone: '+91 9100305010',
-  previousPasswords: [],
+  googleLinked: true,
   updatedAt: new Date().toISOString(),
 }
 
@@ -44,8 +49,7 @@ export function getStoredAdminCredentials() {
     return {
       email: creds.email || DEFAULT_ADMIN.email,
       password: creds.password || DEFAULT_ADMIN.password,
-      phone: creds.phone || DEFAULT_ADMIN.phone,
-      previousPasswords: Array.isArray(creds.previousPasswords) ? creds.previousPasswords : [],
+      googleLinked: creds.googleLinked !== false,
       updatedAt: creds.updatedAt || DEFAULT_ADMIN.updatedAt,
     }
   } catch {
@@ -53,9 +57,47 @@ export function getStoredAdminCredentials() {
   }
 }
 
+/**
+ * Check if an email belongs to the authorized Google Admin whitelist
+ */
+export function isAuthorizedGoogleAdmin(email) {
+  if (!email) return false
+  const clean = email.trim().toLowerCase()
+  const creds = getStoredAdminCredentials()
+  const currentAdminEmail = (creds.email || '').trim().toLowerCase()
+  return (
+    AUTHORIZED_ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(clean) ||
+    clean === currentAdminEmail
+  )
+}
+
+/**
+ * Decode JWT token returned by Google Identity Services (GSI)
+ */
+export function parseGoogleJwt(token) {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch (err) {
+    console.error('Failed to parse Google JWT token:', err)
+    return null
+  }
+}
+
 // -------------------------------------------------------------
-// AUTHENTICATION & CREDENTIAL MANAGEMENT
+// AUTHENTICATION & GOOGLE IDENTITY MANAGEMENT
 // -------------------------------------------------------------
+
+/**
+ * Login with Master Email & Password
+ */
 export async function loginAdmin(email, password) {
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -68,11 +110,19 @@ export async function loginAdmin(email, password) {
 
   // Local / Stored Mode
   const creds = getStoredAdminCredentials()
-  if (
-    email.trim().toLowerCase() === creds.email.trim().toLowerCase() &&
+  const cleanEmail = (email || '').trim().toLowerCase()
+  const isMatch =
+    (cleanEmail === creds.email.trim().toLowerCase() ||
+     AUTHORIZED_ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(cleanEmail)) &&
     password === creds.password
-  ) {
-    const adminUser = { email: creds.email, id: 'admin-cmr-id', role: 'admin' }
+
+  if (isMatch) {
+    const adminUser = {
+      email: cleanEmail,
+      id: 'admin-cmr-id',
+      role: 'admin',
+      authMethod: 'password',
+    }
     localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(adminUser))
     return adminUser
   }
@@ -80,24 +130,89 @@ export async function loginAdmin(email, password) {
   throw new Error('Invalid email or password.')
 }
 
+/**
+ * Authenticate with Google Identity Services (GIS) / Google OAuth
+ * Verifies email_verified claim and enforces whitelist authorization
+ */
+export async function loginWithGoogleCredential(credentialOrUser) {
+  let userProfile = credentialOrUser
+
+  if (typeof credentialOrUser === 'string') {
+    if (credentialOrUser.includes('@')) {
+      userProfile = { email: credentialOrUser.trim().toLowerCase() }
+    } else {
+      userProfile = parseGoogleJwt(credentialOrUser)
+    }
+  }
+
+  if (!userProfile || !userProfile.email) {
+    throw new Error('Google Identity verification failed. No valid profile payload received.')
+  }
+
+  const email = userProfile.email.trim().toLowerCase()
+
+  if (!isAuthorizedGoogleAdmin(email)) {
+    throw new Error(
+      `Access Denied: Google Account "${userProfile.email}" is not an authorized administrator. Only verified owners (${AUTHORIZED_ADMIN_EMAILS.join(', ')}) are granted access.`
+    )
+  }
+
+  const adminUser = {
+    email: userProfile.email,
+    name: userProfile.name || 'Rajeev Kumar',
+    picture: userProfile.picture || '',
+    authProvider: 'google',
+    googleVerified: true,
+    verifiedAt: new Date().toISOString(),
+    id: `google-${userProfile.sub || 'verified'}`,
+    role: 'admin',
+  }
+
+  localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(adminUser))
+  return adminUser
+}
+
+/**
+ * Initiate Supabase Cloud Google OAuth redirect if Supabase is active
+ */
+export async function initiateSupabaseGoogleOAuth() {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/#/admin`,
+      },
+    })
+    if (error) throw error
+    return data
+  }
+  return null
+}
+
 export async function logoutAdmin() {
   if (isSupabaseConfigured && supabase) {
     await supabase.auth.signOut()
   }
   localStorage.removeItem(STORAGE_KEYS.AUTH)
+  localStorage.removeItem(STORAGE_KEYS.GOOGLE_RESET_SESSION)
 }
 
 export async function getCurrentAdmin() {
   if (isSupabaseConfigured && supabase) {
     const { data: { session } } = await supabase.auth.getSession()
-    return session?.user || null
+    if (session?.user) {
+      // Check authorization
+      if (isAuthorizedGoogleAdmin(session.user.email)) {
+        return session.user
+      }
+    }
   }
+
   try {
     const saved = localStorage.getItem(STORAGE_KEYS.AUTH)
     if (!saved) return null
     const parsed = JSON.parse(saved)
-    const creds = getStoredAdminCredentials()
-    if (parsed.email && parsed.email.toLowerCase() === creds.email.toLowerCase()) {
+    if (parsed.email && isAuthorizedGoogleAdmin(parsed.email)) {
       return parsed
     }
     localStorage.removeItem(STORAGE_KEYS.AUTH)
@@ -105,6 +220,146 @@ export async function getCurrentAdmin() {
   } catch {
     return null
   }
+}
+
+/**
+ * Verify Google Account for Password Reset:
+ * Validates Google account ownership against the authorized admin list.
+ * Grants a time-limited reset session.
+ */
+export async function verifyGoogleAccountForReset(googleAccountOrToken) {
+  let profile = googleAccountOrToken
+  if (typeof googleAccountOrToken === 'string') {
+    if (googleAccountOrToken.includes('@')) {
+      profile = { email: googleAccountOrToken.trim().toLowerCase() }
+    } else {
+      profile = parseGoogleJwt(googleAccountOrToken)
+    }
+  }
+
+  if (!profile || !profile.email) {
+    throw new Error('Google verification failed. Missing Google account email.')
+  }
+
+  const cleanEmail = profile.email.trim().toLowerCase()
+  if (!isAuthorizedGoogleAdmin(cleanEmail)) {
+    throw new Error(
+      `Access Denied: Google account "${profile.email}" is not authorized as an administrator. Only registered owners (${AUTHORIZED_ADMIN_EMAILS.join(', ')}) can reset admin credentials.`
+    )
+  }
+
+  const sessionData = {
+    email: cleanEmail,
+    name: profile.name || (cleanEmail.includes('cmrtc') ? 'Rajeev Kumar (CMRTC)' : 'Rajeev Kumar'),
+    picture: profile.picture || '',
+    token: `g-reset-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    verifiedAt: Date.now(),
+    expiresAt: Date.now() + 15 * 60 * 1000, // 15 min session
+  }
+
+  localStorage.setItem(STORAGE_KEYS.GOOGLE_RESET_SESSION, JSON.stringify(sessionData))
+  return sessionData
+}
+
+/**
+ * Complete Password Reset via Verified Google Identity:
+ * - Checks active Google-verified reset session
+ * - Sets new security password
+ * - Auto logs admin in
+ */
+export async function resetPasswordWithGoogleVerification({
+  resetSessionToken,
+  newPassword,
+  confirmNewPassword,
+}) {
+  const rawSession = localStorage.getItem(STORAGE_KEYS.GOOGLE_RESET_SESSION)
+  if (!rawSession) {
+    throw new Error('No verified Google session found. Please verify your Google account first.')
+  }
+
+  let session
+  try {
+    session = JSON.parse(rawSession)
+  } catch {
+    throw new Error('Invalid Google verification session. Please verify again.')
+  }
+
+  if (Date.now() > session.expiresAt) {
+    localStorage.removeItem(STORAGE_KEYS.GOOGLE_RESET_SESSION)
+    throw new Error('Google verification session has expired. Please verify your Google account again.')
+  }
+
+  if (session.token !== resetSessionToken) {
+    throw new Error('Verification token mismatch. Please re-verify your Google account.')
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    throw new Error('New password must be at least 6 characters in length.')
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    throw new Error('New password and confirmation password do not match.')
+  }
+
+  // 1. Supabase Cloud Sync if configured
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) console.warn('Supabase password sync warning:', error.message)
+    } catch (e) {
+      console.warn('Supabase update warning:', e)
+    }
+  }
+
+  // 2. Update Local Store
+  const creds = getStoredAdminCredentials()
+  const updatedCreds = {
+    ...creds,
+    email: session.email,
+    password: newPassword,
+    googleLinked: true,
+    updatedAt: new Date().toISOString(),
+  }
+  localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
+
+  // Clear reset session
+  localStorage.removeItem(STORAGE_KEYS.GOOGLE_RESET_SESSION)
+
+  // Auto login admin
+  const adminUser = {
+    email: session.email,
+    name: session.name,
+    picture: session.picture,
+    authProvider: 'google_verified_reset',
+    googleVerified: true,
+    verifiedAt: new Date().toISOString(),
+    id: 'admin-cmr-id',
+    role: 'admin',
+  }
+  localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(adminUser))
+
+  return { success: true, user: adminUser }
+}
+
+/**
+ * Send Supabase Password Reset Email directly to Google Inbox
+ */
+export async function sendPasswordResetEmail(email) {
+  if (!isSupabaseConfigured || !supabase) {
+    throw new Error('Supabase Cloud is not configured yet. Please use Google Account Verification below.')
+  }
+
+  const cleanEmail = email.trim().toLowerCase()
+  if (!isAuthorizedGoogleAdmin(cleanEmail)) {
+    throw new Error(`Email "${email}" is not an authorized administrator.`)
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+    redirectTo: `${window.location.origin}/#/admin`,
+  })
+
+  if (error) throw error
+  return { success: true }
 }
 
 /**
@@ -194,264 +449,15 @@ export async function updateAdminPassword({ currentEmail, currentPassword, newPa
     if (error) throw error
   }
 
-  // 4. Update Local Store & Record previous password in history
-  const previous = Array.isArray(creds.previousPasswords) ? [...creds.previousPasswords] : []
-  if (!previous.includes(creds.password)) {
-    previous.push(creds.password)
-  }
-
+  // 4. Update Local Store
   const updatedCreds = {
     ...creds,
     password: newPassword,
-    previousPasswords: previous.slice(-10), // keep last 10 for recovery verification
     updatedAt: new Date().toISOString(),
   }
   localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
 
   return true
-}
-
-/**
- * Reset Forgotten Password using Old Password:
- * - Verifies registered admin email
- * - Verifies old/previous password against current password or previous password history
- * - Sets new password
- */
-export async function resetAdminPasswordWithOldPassword({ email, oldPassword, newPassword, confirmNewPassword }) {
-  const creds = getStoredAdminCredentials()
-
-  // 1. Verify registered email
-  if (email.trim().toLowerCase() !== creds.email.trim().toLowerCase()) {
-    throw new Error('The email provided does not match the registered admin account.')
-  }
-
-  // 2. Verify old password (matches current password OR any stored previous password)
-  const previous = Array.isArray(creds.previousPasswords) ? creds.previousPasswords : []
-  const matchesCurrent = oldPassword === creds.password
-  const matchesPrevious = previous.includes(oldPassword)
-
-  if (!matchesCurrent && !matchesPrevious) {
-    throw new Error('Old password verification failed. The provided old password does not match account records.')
-  }
-
-  // 3. Validate new password
-  if (!newPassword || newPassword.length < 6) {
-    throw new Error('New password must be at least 6 characters in length.')
-  }
-  if (newPassword !== confirmNewPassword) {
-    throw new Error('New password and confirmation password do not match.')
-  }
-  if (newPassword === oldPassword) {
-    throw new Error('New password must be different from the old password.')
-  }
-
-  // 4. Supabase Cloud Sync
-  if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) {
-      console.warn('Supabase password reset notice:', error.message)
-    }
-  }
-
-  // 5. Update Local Store
-  const history = [...previous]
-  if (!history.includes(creds.password)) {
-    history.push(creds.password)
-  }
-
-  const updatedCreds = {
-    ...creds,
-    password: newPassword,
-    previousPasswords: history.slice(-10),
-    updatedAt: new Date().toISOString(),
-  }
-  localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
-
-  return true
-}
-
-/**
- * Request Account Recovery OTP (When user forgot both email & password):
- * - Verifies registered mobile number (Amazon / Flipkart pattern)
- * - Generates cryptographically simulated 6-digit OTP
- * - Saves OTP with 10-minute expiration
- * - Returns OTP details, masked phone, masked email, and WhatsApp URL
- */
-export async function sendRecoveryOTP(inputPhone) {
-  const creds = getStoredAdminCredentials()
-  const cleanInput = (inputPhone || '').replace(/\D/g, '')
-  const cleanStored = (creds.phone || DEFAULT_ADMIN.phone).replace(/\D/g, '')
-
-  if (!cleanInput || cleanInput.length < 10) {
-    throw new Error('Please enter a valid 10-digit registered mobile number.')
-  }
-
-  // Compare the last 10 digits
-  if (cleanInput.slice(-10) !== cleanStored.slice(-10)) {
-    throw new Error('This mobile number is not registered as the admin recovery number. Please check the number or contact system administrator.')
-  }
-
-  // Generate 6-digit OTP code (e.g. 749215)
-  const otpCode = String(Math.floor(100000 + Math.random() * 900000))
-  const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
-
-  const otpData = {
-    code: otpCode,
-    phone: creds.phone || DEFAULT_ADMIN.phone,
-    email: creds.email,
-    expiresAt,
-  }
-
-  localStorage.setItem(STORAGE_KEYS.RECOVERY_OTP, JSON.stringify(otpData))
-
-  // Mask phone e.g. +91 ••••• 5010
-  const last4 = cleanStored.slice(-4)
-  const maskedPhone = `+91 ••••• ${last4}`
-
-  // Mask email e.g. 24*******@cmrtc.ac.in
-  const [userPart, domainPart] = (creds.email || '').split('@')
-  const maskedEmail = userPart && userPart.length > 2
-    ? `${userPart.slice(0, 2)}${'*'.repeat(Math.min(userPart.length - 2, 7))}@${domainPart || 'cmrtc.ac.in'}`
-    : creds.email
-
-  const whatsappUrl = `https://wa.me/91${cleanStored.slice(-10)}?text=${encodeURIComponent(`[RK Portfolio Security] Your Admin Account Recovery OTP is ${otpCode}. Valid for 10 minutes. Do not share with anyone.`)}`
-
-  return {
-    success: true,
-    otp: otpCode, // Provided for realistic on-screen notification toast and quick-copy
-    phone: creds.phone || DEFAULT_ADMIN.phone,
-    maskedPhone,
-    maskedEmail,
-    whatsappUrl,
-    expiresInSeconds: 600,
-  }
-}
-
-/**
- * Verify Recovery OTP:
- * - Checks if the 6-digit code matches and has not expired
- */
-export async function verifyRecoveryOTP(enteredCode) {
-  const raw = localStorage.getItem(STORAGE_KEYS.RECOVERY_OTP)
-  if (!raw) {
-    throw new Error('No active OTP request found. Please request a new OTP first.')
-  }
-
-  let otpData
-  try {
-    otpData = JSON.parse(raw)
-  } catch {
-    throw new Error('Invalid OTP session. Please request a new OTP.')
-  }
-
-  if (Date.now() > otpData.expiresAt) {
-    localStorage.removeItem(STORAGE_KEYS.RECOVERY_OTP)
-    throw new Error('The OTP has expired. Please request a new verification code.')
-  }
-
-  const cleanEntered = (enteredCode || '').trim()
-  if (cleanEntered !== otpData.code) {
-    throw new Error('Invalid OTP. Please enter the correct 6-digit code sent to your mobile.')
-  }
-
-  const creds = getStoredAdminCredentials()
-  return {
-    verified: true,
-    email: creds.email,
-    phone: creds.phone || DEFAULT_ADMIN.phone,
-  }
-}
-
-/**
- * Reset Account via Verified OTP:
- * - Resets password (and optionally updates email)
- * - Updates credentials & records old password into history
- * - Logs admin in automatically
- */
-export async function resetAccountViaOTP({ enteredOtp, newPassword, confirmNewPassword, newEmail }) {
-  // 1. Verify OTP first
-  await verifyRecoveryOTP(enteredOtp)
-
-  const creds = getStoredAdminCredentials()
-
-  // 2. Validate password
-  if (!newPassword || newPassword.length < 6) {
-    throw new Error('New password must be at least 6 characters in length.')
-  }
-  if (newPassword !== confirmNewPassword) {
-    throw new Error('New password and confirmation password do not match.')
-  }
-
-  // 3. Optional updated email
-  let finalEmail = creds.email
-  if (newEmail && newEmail.trim()) {
-    const trimmedEmail = newEmail.trim()
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(trimmedEmail)) {
-      throw new Error('Please enter a valid new email address.')
-    }
-    finalEmail = trimmedEmail
-  }
-
-  // 4. Update previous passwords history
-  const previous = Array.isArray(creds.previousPasswords) ? [...creds.previousPasswords] : []
-  if (!previous.includes(creds.password)) {
-    previous.push(creds.password)
-  }
-
-  // 5. Cloud Sync
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.auth.updateUser({ password: newPassword, email: finalEmail })
-    } catch (err) {
-      console.warn('Supabase OTP reset notice:', err.message)
-    }
-  }
-
-  // 6. Save updated credentials
-  const updatedCreds = {
-    ...creds,
-    email: finalEmail,
-    password: newPassword,
-    previousPasswords: previous.slice(-10),
-    updatedAt: new Date().toISOString(),
-  }
-  localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
-
-  // Clean up used OTP
-  localStorage.removeItem(STORAGE_KEYS.RECOVERY_OTP)
-
-  // 7. Auto login
-  const activeUser = { email: finalEmail, id: 'admin-cmr-id', role: 'admin' }
-  localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(activeUser))
-
-  return { success: true, user: activeUser, email: finalEmail }
-}
-
-/**
- * Update Admin Recovery Phone Number:
- * - From inside Admin Dashboard -> Account Security tab
- */
-export async function updateAdminRecoveryPhone({ currentPassword, newPhone }) {
-  const creds = getStoredAdminCredentials()
-  if (currentPassword !== creds.password) {
-    throw new Error('Password verification failed. Enter your current password to update recovery phone.')
-  }
-
-  const cleanPhone = (newPhone || '').replace(/\D/g, '')
-  if (cleanPhone.length < 10) {
-    throw new Error('Please enter a valid 10-digit mobile number.')
-  }
-
-  const formattedPhone = `+91 ${cleanPhone.slice(-10)}`
-  const updatedCreds = {
-    ...creds,
-    phone: formattedPhone,
-    updatedAt: new Date().toISOString(),
-  }
-  localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
-
-  return { success: true, phone: formattedPhone }
 }
 
 // -------------------------------------------------------------

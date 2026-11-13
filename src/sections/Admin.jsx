@@ -1,23 +1,48 @@
 import { useEffect, useState } from 'react'
 import {
   loginAdmin,
+  loginWithGoogleCredential,
+  initiateSupabaseGoogleOAuth,
   logoutAdmin,
   getCurrentAdmin,
   isSupabaseConfigured,
   getStoredAdminCredentials,
+  AUTHORIZED_ADMIN_EMAILS,
+  isAuthorizedGoogleAdmin,
+  verifyGoogleAccountForReset,
+  resetPasswordWithGoogleVerification,
+  sendPasswordResetEmail,
   updateAdminEmail,
   updateAdminPassword,
-  resetAdminPasswordWithOldPassword,
-  sendRecoveryOTP,
-  verifyRecoveryOTP,
-  resetAccountViaOTP,
-  updateAdminRecoveryPhone,
   addGalleryPhoto,
   deleteGalleryPhoto,
   saveGalleryOrder,
   saveSiteContent,
 } from '../lib/supabase'
 import { useData } from '../context/DataContext'
+
+function GoogleLogoSvg() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.15z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  )
+}
 
 export default function Admin() {
   const { photos, setPhotos, categories, content, setContent, reloadData } = useData()
@@ -29,41 +54,23 @@ export default function Admin() {
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
-  // Account Recovery Mode: null (Sign In) | 'otp' (Forgot Email & Password via Mobile OTP) | 'old-password' (Reset via Old Password)
-  const [recoveryMode, setRecoveryMode] = useState(null)
+  // Recovery Mode: 'signin' | 'forgot-password'
+  const [authView, setAuthView] = useState('signin')
 
-  // 1. Forgot Email & Password (Mobile OTP Flow - Amazon / Flipkart Style)
-  const [otpStep, setOtpStep] = useState(1) // 1: Enter Mobile, 2: Enter & Verify OTP, 3: Set New Password & Recover Email
-  const [recoveryPhone, setRecoveryPhone] = useState('')
-  const [otpInput, setOtpInput] = useState('')
-  const [otpNotice, setOtpNotice] = useState(null) // { otp, phone, maskedPhone, maskedEmail, whatsappUrl }
-  const [otpTimer, setOtpTimer] = useState(0) // seconds countdown for resend
-  const [otpError, setOtpError] = useState('')
-  const [otpSuccess, setOtpSuccess] = useState('')
-  const [otpLoading, setOtpLoading] = useState(false)
-  const [recoveredEmail, setRecoveredEmail] = useState('')
-  const [recoveredNewEmail, setRecoveredNewEmail] = useState('')
-  const [otpNewPassword, setOtpNewPassword] = useState('')
-  const [otpConfirmPassword, setOtpConfirmPassword] = useState('')
-
-  // 2. Forgot Password State (Reset via Old Password)
-  const [forgotEmail, setForgotEmail] = useState('')
-  const [forgotOldPassword, setForgotOldPassword] = useState('')
-  const [forgotNewPassword, setForgotNewPassword] = useState('')
-  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('')
-  const [forgotError, setForgotError] = useState('')
-  const [forgotSuccess, setForgotSuccess] = useState('')
-  const [forgotSubmitting, setForgotSubmitting] = useState(false)
-
-  // 3. Recovery Phone Form (Inside Account Security Tab)
-  const [phoneForm, setPhoneForm] = useState({
-    currentPassword: '',
-    newPhone: '',
-  })
-  const [phoneError, setPhoneError] = useState('')
-  const [phoneSuccess, setPhoneSuccess] = useState('')
-  const [phoneLoading, setPhoneLoading] = useState(false)
+  // Google-Verified Password Reset State
+  const [resetStep, setResetStep] = useState(1) // 1: Verify Google Identity, 2: Set New Password
+  const [selectedGoogleAccount, setSelectedGoogleAccount] = useState(AUTHORIZED_ADMIN_EMAILS[0])
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('')
+  const [useCustomGoogle, setUseCustomGoogle] = useState(false)
+  const [verifiedSession, setVerifiedSession] = useState(null)
+  const [newResetPassword, setNewResetPassword] = useState('')
+  const [confirmResetPassword, setConfirmResetPassword] = useState('')
+  const [resetError, setResetError] = useState('')
+  const [resetSuccess, setResetSuccess] = useState('')
+  const [resetSubmitting, setResetSubmitting] = useState(false)
+  const [emailMagicLinkSent, setEmailMagicLinkSent] = useState(false)
 
   // Security Tab State (Change Email & Change Password)
   const [emailForm, setEmailForm] = useState({
@@ -109,7 +116,7 @@ export default function Admin() {
     phone: content.site?.phone || '+91 9100305010',
     email: content.site?.email || 'gantyalarajeevkumar@gmail.com',
     whatsapp: content.site?.whatsapp || 'https://wa.me/919100305010',
-    instagram: content.site?.instagram || '',
+    instagram: content.site?.instagram || 'https://instagram.com/rajeev_dop',
     aboutQuote: content.about?.quote || '',
     aboutTitleLine: content.about?.titleLine || '',
     aboutProfile: (content.about?.profile || []).join('\n\n'),
@@ -124,6 +131,42 @@ export default function Admin() {
       .finally(() => setAuthLoading(false))
   }, [])
 
+  // Google Identity Services (GIS) button initialization
+  useEffect(() => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+    if (window.google?.accounts?.id && googleClientId && authView === 'signin' && !adminUser) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response) => {
+            setGoogleLoading(true)
+            setLoginError('')
+            try {
+              const user = await loginWithGoogleCredential(response.credential)
+              setAdminUser(user)
+            } catch (err) {
+              setLoginError(err.message || 'Google authentication failed.')
+            } finally {
+              setGoogleLoading(false)
+            }
+          },
+        })
+        const container = document.getElementById('gsi-official-button')
+        if (container) {
+          window.google.accounts.id.renderButton(container, {
+            theme: 'filled_black',
+            size: 'large',
+            width: '100%',
+            text: 'continue_with',
+            shape: 'rectangular',
+          })
+        }
+      } catch (err) {
+        console.warn('GIS init error:', err)
+      }
+    }
+  }, [authView, adminUser])
+
   // Sync content form data when content loads
   useEffect(() => {
     if (content.site) {
@@ -136,7 +179,7 @@ export default function Admin() {
         phone: content.site.phone || '',
         email: content.site.email || '',
         whatsapp: content.site.whatsapp || '',
-        instagram: content.site.instagram || '',
+        instagram: content.site.instagram || 'https://instagram.com/rajeev_dop',
         aboutQuote: content.about?.quote || '',
         aboutTitleLine: content.about?.titleLine || '',
         aboutProfile: (content.about?.profile || []).join('\n\n'),
@@ -144,7 +187,15 @@ export default function Admin() {
     }
   }, [content])
 
-  // Handle Login
+  // Sync active user email to security forms
+  useEffect(() => {
+    if (adminUser?.email) {
+      setEmailForm((prev) => ({ ...prev, currentEmail: adminUser.email }))
+      setPasswordForm((prev) => ({ ...prev, currentEmail: adminUser.email }))
+    }
+  }, [adminUser])
+
+  // Handle Standard Password Login
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
@@ -159,145 +210,118 @@ export default function Admin() {
     }
   }
 
+  // Handle Google Direct Sign-In
+  const handleGoogleSignIn = async (accountEmail) => {
+    setLoginError('')
+    setGoogleLoading(true)
+    try {
+      if (isSupabaseConfigured) {
+        await initiateSupabaseGoogleOAuth()
+        return
+      }
+
+      // Google Identity Verification
+      const targetEmail = accountEmail || AUTHORIZED_ADMIN_EMAILS[0]
+      if (!isAuthorizedGoogleAdmin(targetEmail)) {
+        throw new Error(
+          `Access Denied: Google Account "${targetEmail}" is not authorized as an administrator. Only verified owners (${AUTHORIZED_ADMIN_EMAILS.join(', ')}) are granted access.`
+        )
+      }
+
+      const user = await loginWithGoogleCredential({
+        email: targetEmail,
+        name: targetEmail.includes('cmrtc') ? 'Rajeev Kumar (CMRTC)' : 'Rajeev Kumar',
+        picture: '',
+        email_verified: true,
+      })
+      setAdminUser(user)
+    } catch (err) {
+      setLoginError(err.message || 'Google sign-in failed.')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
+  // Handle Step 1 of Forgot Password: Verify Google Identity
+  const handleVerifyGoogleIdentity = async (e) => {
+    if (e) e.preventDefault()
+    setResetError('')
+    setResetSuccess('')
+    setResetSubmitting(true)
+
+    const targetEmail = useCustomGoogle ? customGoogleEmail.trim() : selectedGoogleAccount
+
+    try {
+      if (!targetEmail) {
+        throw new Error('Please specify a Google Account email to verify.')
+      }
+
+      const session = await verifyGoogleAccountForReset(targetEmail)
+      setVerifiedSession(session)
+      setResetStep(2)
+      setResetSuccess(`✓ Google Identity Verified! Account authenticated: ${session.email}`)
+    } catch (err) {
+      setResetError(err.message || 'Google account verification failed.')
+    } finally {
+      setResetSubmitting(false)
+    }
+  }
+
+  // Handle Step 2 of Forgot Password: Set New Password
+  const handleCompleteGooglePasswordReset = async (e) => {
+    e.preventDefault()
+    setResetError('')
+    setResetSuccess('')
+    setResetSubmitting(true)
+
+    try {
+      if (!verifiedSession) {
+        throw new Error('Google verification session is missing. Please re-verify your Google account.')
+      }
+
+      const res = await resetPasswordWithGoogleVerification({
+        resetSessionToken: verifiedSession.token,
+        newPassword: newResetPassword,
+        confirmNewPassword: confirmResetPassword,
+      })
+
+      setResetSuccess('✓ Password successfully updated with Google Verification! Logging in...')
+      setTimeout(() => {
+        setAdminUser(res.user)
+        setAuthView('signin')
+        setResetStep(1)
+        setVerifiedSession(null)
+        setNewResetPassword('')
+        setConfirmResetPassword('')
+        setResetSuccess('')
+      }, 1200)
+    } catch (err) {
+      setResetError(err.message || 'Password reset failed.')
+    } finally {
+      setResetSubmitting(false)
+    }
+  }
+
+  // Optional: Send Magic Reset Link to Google Inbox if Supabase is active
+  const handleSendEmailLink = async () => {
+    const targetEmail = useCustomGoogle ? customGoogleEmail.trim() : selectedGoogleAccount
+    setResetError('')
+    setResetSubmitting(true)
+    try {
+      await sendPasswordResetEmail(targetEmail)
+      setEmailMagicLinkSent(true)
+      setResetSuccess(`✓ Password reset link sent to your Google inbox (${targetEmail})! Check your email.`)
+    } catch (err) {
+      setResetError(err.message || 'Could not send reset email.')
+    } finally {
+      setResetSubmitting(false)
+    }
+  }
+
   // Handle Logout
   const handleLogout = async () => {
     await logoutAdmin()
     setAdminUser(null)
-  }
-
-  // Sync active user email to security forms
-  useEffect(() => {
-    if (adminUser?.email) {
-      setEmailForm((prev) => ({ ...prev, currentEmail: adminUser.email }))
-      setPasswordForm((prev) => ({ ...prev, currentEmail: adminUser.email }))
-    }
-  }, [adminUser])
-
-  // Handle Forgot Password (Recovery via Old Password)
-  const handleForgotPassword = async (e) => {
-    e.preventDefault()
-    setForgotError('')
-    setForgotSuccess('')
-    setForgotSubmitting(true)
-    try {
-      await resetAdminPasswordWithOldPassword({
-        email: forgotEmail,
-        oldPassword: forgotOldPassword,
-        newPassword: forgotNewPassword,
-        confirmNewPassword: forgotConfirmPassword,
-      })
-      setForgotSuccess('✓ Password verified & reset successfully! You can now sign in.')
-      setLoginEmail(forgotEmail)
-      setLoginPassword(forgotNewPassword)
-      setTimeout(() => {
-        setRecoveryMode(null)
-        setForgotSuccess('')
-        setForgotOldPassword('')
-        setForgotNewPassword('')
-        setForgotConfirmPassword('')
-      }, 2000)
-    } catch (err) {
-      setForgotError(err.message || 'Password reset failed.')
-    } finally {
-      setForgotSubmitting(false)
-    }
-  }
-
-  // OTP Countdown timer
-  useEffect(() => {
-    if (otpTimer <= 0) return
-    const interval = setInterval(() => {
-      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [otpTimer])
-
-  // Handle Send OTP (Amazon / Flipkart Flow)
-  const handleSendOTP = async (e) => {
-    if (e) e.preventDefault()
-    setOtpError('')
-    setOtpSuccess('')
-    setOtpLoading(true)
-    try {
-      const res = await sendRecoveryOTP(recoveryPhone)
-      setOtpNotice(res)
-      setOtpStep(2)
-      setOtpTimer(60)
-      setOtpSuccess(`✓ 6-Digit OTP sent successfully to ${res.maskedPhone}!`)
-    } catch (err) {
-      setOtpError(err.message || 'Failed to send OTP. Please check your registered mobile number.')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  // Handle Verify OTP
-  const handleVerifyOTP = async (e) => {
-    if (e) e.preventDefault()
-    setOtpError('')
-    setOtpSuccess('')
-    setOtpLoading(true)
-    try {
-      const res = await verifyRecoveryOTP(otpInput)
-      setRecoveredEmail(res.email)
-      setRecoveredNewEmail(res.email)
-      setOtpStep(3)
-      setOtpSuccess(`✓ Identity Verified! Registered account found: ${res.email}`)
-    } catch (err) {
-      setOtpError(err.message || 'Invalid or expired 6-digit OTP code.')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  // Handle Complete Account Recovery & Reset Password
-  const handleCompleteRecovery = async (e) => {
-    if (e) e.preventDefault()
-    setOtpError('')
-    setOtpSuccess('')
-    setOtpLoading(true)
-    try {
-      const res = await resetAccountViaOTP({
-        enteredOtp: otpInput,
-        newPassword: otpNewPassword,
-        confirmNewPassword: otpConfirmPassword,
-        newEmail: recoveredNewEmail,
-      })
-      setOtpSuccess('✓ Password successfully reset! Authenticating into Admin Dashboard...')
-      setTimeout(() => {
-        setAdminUser(res.user)
-        setRecoveryMode(null)
-        setOtpStep(1)
-        setOtpInput('')
-        setOtpNotice(null)
-        setOtpSuccess('')
-      }, 1200)
-    } catch (err) {
-      setOtpError(err.message || 'Password reset failed. Please ensure password is at least 6 characters.')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  // Handle Update Recovery Phone
-  const handleUpdateRecoveryPhone = async (e) => {
-    e.preventDefault()
-    setPhoneError('')
-    setPhoneSuccess('')
-    setPhoneLoading(true)
-    try {
-      const res = await updateAdminRecoveryPhone({
-        currentPassword: phoneForm.currentPassword,
-        newPhone: phoneForm.newPhone,
-      })
-      setPhoneSuccess(`✓ Verified recovery mobile updated to ${res.phone}!`)
-      setPhoneForm({ currentPassword: '', newPhone: '' })
-      setTimeout(() => setPhoneSuccess(''), 5000)
-    } catch (err) {
-      setPhoneError(err.message || 'Failed to update recovery phone.')
-    } finally {
-      setPhoneLoading(false)
-    }
   }
 
   // Handle Update Email with Verification
@@ -356,7 +380,6 @@ export default function Admin() {
     const previewUrl = URL.createObjectURL(file)
     setNewImagePreview(previewUrl)
 
-    // Calculate natural ratio
     const img = new Image()
     img.src = previewUrl
     img.onload = () => {
@@ -481,13 +504,13 @@ export default function Admin() {
     return (
       <div className="admin-page admin-loading">
         <div className="admin-spinner" />
-        <p>Verifying secure admin credentials...</p>
+        <p>Verifying Google Admin Security credentials...</p>
       </div>
     )
   }
 
   // -------------------------------------------------------------
-  // RENDER: Login Gate
+  // RENDER: Login Gate / Forgot Password
   // -------------------------------------------------------------
   if (!adminUser) {
     const currentCreds = getStoredAdminCredentials()
@@ -495,204 +518,172 @@ export default function Admin() {
     return (
       <div className="admin-page admin-login-wrapper">
         <div className="admin-login-card glass-panel">
-          {recoveryMode === 'otp' ? (
+          {authView === 'forgot-password' ? (
             /* ========================================================= */
-            /* MODE 1: AMAZON / FLIPKART STYLE MOBILE OTP RECOVERY       */
+            /* GOOGLE IDENTITY VERIFICATION FOR FORGOT PASSWORD           */
             /* ========================================================= */
             <>
               <div className="admin-login-head">
-                <span className="admin-badge">⚡ Instant OTP Recovery</span>
-                <h2>Forgot Email & Password?</h2>
+                <div className="google-badge-pill">
+                  <GoogleLogoSvg />
+                  <span>Google Identity Verification</span>
+                </div>
+                <h2>Recover Admin Access</h2>
                 <p className="admin-subtext">
-                  Recover your account using your registered mobile number — just like Amazon and Flipkart.
+                  Reset your master password securely by verifying your authorized Google Account.
                 </p>
               </div>
 
-              {/* Step Progress Pills */}
-              <div className="otp-steps-indicator" role="tablist" aria-label="Recovery steps">
-                <span className={`otp-step-pill ${otpStep === 1 ? 'is-active' : ''}`}>1. Mobile Number</span>
-                <span className={`otp-step-pill ${otpStep === 2 ? 'is-active' : ''}`}>2. 6-Digit OTP</span>
-                <span className={`otp-step-pill ${otpStep === 3 ? 'is-active' : ''}`}>3. Reset Password</span>
+              {/* Recovery Steps Progress */}
+              <div className="google-steps-nav">
+                <div className={`google-step-item ${resetStep === 1 ? 'is-active' : ''} ${resetStep > 1 ? 'is-done' : ''}`}>
+                  <span className="step-num">{resetStep > 1 ? '✓' : '1'}</span>
+                  <span>Google Verification</span>
+                </div>
+                <div className="step-connector" />
+                <div className={`google-step-item ${resetStep === 2 ? 'is-active' : ''}`}>
+                  <span className="step-num">2</span>
+                  <span>Set New Password</span>
+                </div>
               </div>
 
-              {/* Realistic Incoming SMS / Push Banner */}
-              {otpNotice && otpStep >= 2 && (
-                <div className="otp-sms-banner">
-                  <div className="otp-sms-header">
-                    <span className="otp-sms-icon">📱</span>
-                    <div className="otp-sms-title-wrap">
-                      <strong>SMS ALERT &bull; RK-AUTH</strong>
-                      <span className="otp-sms-time">Now</span>
+              {resetError && <div className="admin-alert admin-alert--error">{resetError}</div>}
+              {resetSuccess && <div className="admin-alert admin-alert--success">{resetSuccess}</div>}
+
+              {/* STEP 1: Verify Google Account */}
+              {resetStep === 1 && (
+                <div className="google-recovery-step">
+                  <div className="google-whitelist-notice">
+                    <p className="whitelist-title">🛡️ Authorized Google Accounts</p>
+                    <p className="whitelist-desc">
+                      Only verified owners of these registered Google accounts can authorize password resets:
+                    </p>
+                    <div className="google-account-selector-list">
+                      {AUTHORIZED_ADMIN_EMAILS.map((email) => (
+                        <label
+                          key={email}
+                          className={`google-account-option ${!useCustomGoogle && selectedGoogleAccount === email ? 'is-selected' : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name="google-account"
+                            checked={!useCustomGoogle && selectedGoogleAccount === email}
+                            onChange={() => {
+                              setSelectedGoogleAccount(email)
+                              setUseCustomGoogle(false)
+                              setResetError('')
+                            }}
+                          />
+                          <div className="google-account-detail">
+                            <span className="account-email">{email}</span>
+                            <span className="account-tag">
+                              {email.includes('cmrtc') ? 'Institutional Google Workspace' : 'Primary Google Account'}
+                            </span>
+                          </div>
+                          <span className="google-check-icon">✓</span>
+                        </label>
+                      ))}
+
+                      <label className={`google-account-option ${useCustomGoogle ? 'is-selected' : ''}`}>
+                        <input
+                          type="radio"
+                          name="google-account"
+                          checked={useCustomGoogle}
+                          onChange={() => {
+                            setUseCustomGoogle(true)
+                            setResetError('')
+                          }}
+                        />
+                        <div className="google-account-detail">
+                          <span className="account-email">Use other authorized Google email</span>
+                          <span className="account-tag">Whitelist check strictly enforced</span>
+                        </div>
+                      </label>
                     </div>
-                  </div>
-                  <p className="otp-sms-body">
-                    Your Admin Recovery OTP is <span className="otp-sms-code">{otpNotice.otp}</span>. Valid for 10 minutes.
-                  </p>
-                  <div className="otp-sms-actions">
-                    <button
-                      type="button"
-                      className="otp-autofill-btn"
-                      onClick={() => {
-                        setOtpInput(otpNotice.otp)
-                        setOtpError('')
-                      }}
-                    >
-                      ⚡ Quick Auto-Fill OTP ({otpNotice.otp})
-                    </button>
-                    {otpNotice.whatsappUrl && (
-                      <a
-                        href={otpNotice.whatsappUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="otp-whatsapp-btn"
-                      >
-                        💬 Deliver to WhatsApp
-                      </a>
+
+                    {useCustomGoogle && (
+                      <div className="custom-google-input-box">
+                        <input
+                          type="email"
+                          required
+                          value={customGoogleEmail}
+                          onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                          placeholder="your-account@gmail.com"
+                          className="admin-input"
+                          autoFocus
+                        />
+                      </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {otpError && <div className="admin-alert admin-alert--error">{otpError}</div>}
-              {otpSuccess && <div className="admin-alert admin-alert--success">{otpSuccess}</div>}
-
-              {/* STEP 1: Enter Mobile Number */}
-              {otpStep === 1 && (
-                <form onSubmit={handleSendOTP} className="admin-login-form">
-                  <label>
-                    Registered Mobile Number
-                    <input
-                      type="tel"
-                      required
-                      value={recoveryPhone}
-                      onChange={(e) => setRecoveryPhone(e.target.value)}
-                      placeholder="+91 9100305010 or 9100305010"
-                      autoComplete="tel"
-                    />
-                  </label>
-
-                  <div className="otp-helper-badge">
-                    <span>💡 Default registered number: <strong>{currentCreds.phone || '+91 9100305010'}</strong></span>
-                    <button
-                      type="button"
-                      className="admin-text-link"
-                      onClick={() => setRecoveryPhone(currentCreds.phone || '+91 9100305010')}
-                    >
-                      Use Default Phone
-                    </button>
                   </div>
 
                   <button
-                    type="submit"
-                    className="glass-btn glass-btn--primary admin-submit-btn"
-                    disabled={otpLoading}
+                    type="button"
+                    onClick={handleVerifyGoogleIdentity}
+                    disabled={resetSubmitting}
+                    className="google-verify-submit-btn"
                   >
-                    {otpLoading ? 'Sending 6-Digit OTP...' : '📲 Send 6-Digit OTP Code →'}
+                    <GoogleLogoSvg />
+                    <span>
+                      {resetSubmitting
+                        ? 'Verifying Google Account...'
+                        : `Verify Identity as ${useCustomGoogle ? (customGoogleEmail || 'Google Account') : selectedGoogleAccount}`}
+                    </span>
                   </button>
-                </form>
+
+                  {isSupabaseConfigured && (
+                    <div className="google-magic-link-box">
+                      <p>Or send a password reset magic link directly to this Google inbox:</p>
+                      <button
+                        type="button"
+                        onClick={handleSendEmailLink}
+                        disabled={resetSubmitting}
+                        className="admin-text-link"
+                      >
+                        ✉️ Send Reset Link to Google Inbox →
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
 
-              {/* STEP 2: Enter & Verify 6-digit OTP */}
-              {otpStep === 2 && (
-                <form onSubmit={handleVerifyOTP} className="admin-login-form">
+              {/* STEP 2: Choose New Master Password */}
+              {resetStep === 2 && verifiedSession && (
+                <form onSubmit={handleCompleteGooglePasswordReset} className="admin-login-form">
+                  <div className="google-verified-card">
+                    <div className="verified-head">
+                      <span className="verified-shield">🛡️</span>
+                      <div>
+                        <strong>Google Identity Authenticated</strong>
+                        <span className="verified-email">{verifiedSession.email}</span>
+                      </div>
+                    </div>
+                    <p className="verified-desc">
+                      Ownership verified. Enter your new master security password below to complete reset.
+                    </p>
+                  </div>
+
                   <label>
-                    Enter 6-Digit Verification Code
+                    New Master Password (min 6 characters)
                     <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]{6}"
-                      maxLength={6}
+                      type="password"
                       required
-                      value={otpInput}
-                      onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="• • • • • •"
-                      className="otp-input-large"
+                      minLength={6}
+                      value={newResetPassword}
+                      onChange={(e) => setNewResetPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      autoComplete="new-password"
                       autoFocus
                     />
                   </label>
 
-                  <div className="otp-timer-row">
-                    {otpTimer > 0 ? (
-                      <span className="otp-countdown">Resend OTP in <strong>{otpTimer}s</strong></span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="admin-text-link"
-                        onClick={handleSendOTP}
-                        disabled={otpLoading}
-                      >
-                        🔄 Didn't receive? Resend OTP
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="admin-text-link"
-                      onClick={() => {
-                        setOtpStep(1)
-                        setOtpError('')
-                        setOtpSuccess('')
-                      }}
-                    >
-                      ← Change Mobile Number
-                    </button>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="glass-btn glass-btn--primary admin-submit-btn"
-                    disabled={otpLoading || otpInput.length < 6}
-                  >
-                    {otpLoading ? 'Verifying...' : 'Verify OTP & Continue →'}
-                  </button>
-                </form>
-              )}
-
-              {/* STEP 3: Recover Email & Reset Password */}
-              {otpStep === 3 && (
-                <form onSubmit={handleCompleteRecovery} className="admin-login-form">
-                  <div className="otp-account-found-box">
-                    <span className="account-found-badge">✓ ACCOUNT RECOVERED</span>
-                    <p className="account-found-email">
-                      Registered Email: <strong>{recoveredEmail}</strong>
-                    </p>
-                    <p className="account-found-desc">
-                      Identity verified via mobile OTP. You can now set your new password (or update your email address).
-                    </p>
-                  </div>
-
                   <label>
-                    Admin Email Address (Recovered / Update)
-                    <input
-                      type="email"
-                      required
-                      value={recoveredNewEmail}
-                      onChange={(e) => setRecoveredNewEmail(e.target.value)}
-                      placeholder="admin@example.com"
-                      autoComplete="email"
-                    />
-                  </label>
-
-                  <label>
-                    New Security Password (min 6 characters)
+                    Confirm New Master Password
                     <input
                       type="password"
                       required
                       minLength={6}
-                      value={otpNewPassword}
-                      onChange={(e) => setOtpNewPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      autoComplete="new-password"
-                    />
-                  </label>
-
-                  <label>
-                    Confirm New Password
-                    <input
-                      type="password"
-                      required
-                      minLength={6}
-                      value={otpConfirmPassword}
-                      onChange={(e) => setOtpConfirmPassword(e.target.value)}
+                      value={confirmResetPassword}
+                      onChange={(e) => setConfirmResetPassword(e.target.value)}
                       placeholder="••••••••••••"
                       autoComplete="new-password"
                     />
@@ -701,9 +692,9 @@ export default function Admin() {
                   <button
                     type="submit"
                     className="glass-btn glass-btn--primary admin-submit-btn"
-                    disabled={otpLoading}
+                    disabled={resetSubmitting}
                   >
-                    {otpLoading ? 'Saving Credentials...' : '✓ Reset Password & Enter Dashboard →'}
+                    {resetSubmitting ? 'Updating Credentials...' : '✓ Set New Password & Enter Dashboard →'}
                   </button>
                 </form>
               )}
@@ -713,101 +704,11 @@ export default function Admin() {
                   type="button"
                   className="admin-text-link"
                   onClick={() => {
-                    setRecoveryMode(null)
-                    setOtpStep(1)
-                    setOtpError('')
-                    setOtpSuccess('')
-                    setOtpNotice(null)
-                  }}
-                >
-                  ← Back to Admin Sign In
-                </button>
-              </div>
-            </>
-          ) : recoveryMode === 'old-password' ? (
-            /* ========================================================= */
-            /* MODE 2: RECOVER VIA OLD PASSWORD (HISTORICAL VERIFICATION) */
-            /* ========================================================= */
-            <>
-              <div className="admin-login-head">
-                <span className="admin-badge">Old Password Recovery</span>
-                <h2>Reset Admin Password</h2>
-                <p className="admin-subtext">
-                  Verify your registered admin email and a previously used/old password to set a new password.
-                </p>
-              </div>
-
-              <form onSubmit={handleForgotPassword} className="admin-login-form">
-                {forgotError && <div className="admin-alert admin-alert--error">{forgotError}</div>}
-                {forgotSuccess && <div className="admin-alert admin-alert--success">{forgotSuccess}</div>}
-
-                <label>
-                  Registered Admin Email
-                  <input
-                    type="email"
-                    required
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder={currentCreds.email}
-                    autoComplete="email"
-                  />
-                </label>
-
-                <label>
-                  Previous / Old Password (Verification)
-                  <input
-                    type="password"
-                    required
-                    value={forgotOldPassword}
-                    onChange={(e) => setForgotOldPassword(e.target.value)}
-                    placeholder="Enter previously known password"
-                    autoComplete="current-password"
-                  />
-                </label>
-
-                <label>
-                  New Password (min 6 characters)
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={forgotNewPassword}
-                    onChange={(e) => setForgotNewPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    autoComplete="new-password"
-                  />
-                </label>
-
-                <label>
-                  Confirm New Password
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={forgotConfirmPassword}
-                    onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    autoComplete="new-password"
-                  />
-                </label>
-
-                <button
-                  type="submit"
-                  className="glass-btn glass-btn--primary admin-submit-btn"
-                  disabled={forgotSubmitting}
-                >
-                  {forgotSubmitting ? 'Verifying & Resetting...' : 'Verify Old Password & Reset →'}
-                </button>
-              </form>
-
-              <div className="admin-login-footer">
-                <button
-                  type="button"
-                  className="admin-text-link"
-                  onClick={() => {
-                    setRecoveryMode(null)
-                    setForgotError('')
-                    setForgotSuccess('')
+                    setAuthView('signin')
+                    setResetStep(1)
+                    setResetError('')
+                    setResetSuccess('')
+                    setVerifiedSession(null)
                   }}
                 >
                   ← Back to Admin Sign In
@@ -816,18 +717,63 @@ export default function Admin() {
             </>
           ) : (
             /* ========================================================= */
-            /* STANDARD SIGN-IN VIEW                                      */
+            /* STANDARD SIGN-IN VIEW WITH GOOGLE VERIFICATION             */
             /* ========================================================= */
             <>
               <div className="admin-login-head">
-                <span className="admin-badge">Secure Control Center</span>
+                <span className="admin-badge">Admin Control Center</span>
                 <h2>Rajeev Kumar Portfolio</h2>
-                <p className="admin-subtext">Sign in to manage gallery photos, edit homepage content, and control database records.</p>
+                <p className="admin-subtext">
+                  Sign in using Google Verification or your master administrator credentials.
+                </p>
+              </div>
+
+              {loginError && <div className="admin-alert admin-alert--error">{loginError}</div>}
+
+              {/* Official Google Sign-In Container */}
+              <div className="google-auth-container">
+                <div id="gsi-official-button" style={{ width: '100%' }} />
+
+                <button
+                  type="button"
+                  onClick={() => handleGoogleSignIn(AUTHORIZED_ADMIN_EMAILS[0])}
+                  disabled={googleLoading}
+                  className="google-signin-btn"
+                >
+                  <GoogleLogoSvg />
+                  <span>
+                    {googleLoading
+                      ? 'Authenticating with Google...'
+                      : `Continue with Google (${AUTHORIZED_ADMIN_EMAILS[0].split('@')[0]})`}
+                  </span>
+                </button>
+
+                <div className="google-quick-accounts-row">
+                  <span className="quick-acc-label">Authorized Google Accounts:</span>
+                  <div className="quick-acc-btns">
+                    {AUTHORIZED_ADMIN_EMAILS.map((email) => (
+                      <button
+                        key={email}
+                        type="button"
+                        className="quick-acc-chip"
+                        onClick={() => handleGoogleSignIn(email)}
+                        disabled={googleLoading}
+                        title={`Sign in as ${email}`}
+                      >
+                        <span className="quick-acc-dot">●</span>
+                        <span>{email}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="auth-divider">
+                <span>OR SIGN IN WITH PASSWORD</span>
               </div>
 
               <form onSubmit={handleLogin} className="admin-login-form">
-                {loginError && <div className="admin-alert admin-alert--error">{loginError}</div>}
-
                 <label>
                   Admin Email
                   <input
@@ -841,7 +787,7 @@ export default function Admin() {
                 </label>
 
                 <label>
-                  Security Password
+                  Master Password
                   <input
                     type="password"
                     required
@@ -852,40 +798,27 @@ export default function Admin() {
                   />
                 </label>
 
-                {/* Account Recovery Options */}
-                <div className="admin-recovery-options">
+                <div className="admin-field-helper">
                   <button
                     type="button"
-                    className="admin-otp-recovery-btn"
+                    className="admin-text-link"
                     onClick={() => {
-                      setRecoveryMode('otp')
-                      setOtpStep(1)
-                      setRecoveryPhone(currentCreds.phone || '+91 9100305010')
-                      setOtpError('')
-                      setOtpSuccess('')
+                      setAuthView('forgot-password')
+                      setResetStep(1)
+                      setResetError('')
+                      setResetSuccess('')
+                      setSelectedGoogleAccount(loginEmail || AUTHORIZED_ADMIN_EMAILS[0])
                     }}
                   >
-                    <span>📱</span>
-                    <span>Forgot Both Email & Password? <strong>Recover with Mobile OTP →</strong></span>
+                    🔑 Forgot Password? Reset via Google →
                   </button>
-
-                  <div className="admin-field-helper">
-                    <button
-                      type="button"
-                      className="admin-text-link"
-                      onClick={() => {
-                        setRecoveryMode('old-password')
-                        setForgotEmail(loginEmail || currentCreds.email)
-                        setForgotError('')
-                        setForgotSuccess('')
-                      }}
-                    >
-                      🔑 Reset using Old Password
-                    </button>
-                  </div>
                 </div>
 
-                <button type="submit" className="glass-btn glass-btn--primary admin-submit-btn" disabled={isSubmitting}>
+                <button
+                  type="submit"
+                  className="glass-btn glass-btn--primary admin-submit-btn"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? 'Authenticating...' : 'Authenticate & Sign In →'}
                 </button>
               </form>
@@ -894,7 +827,7 @@ export default function Admin() {
                 <div className="admin-demo-box">
                   <p className="admin-demo-title">💡 Authorized Admin Access</p>
                   <p className="admin-demo-text">
-                    Click below to auto-fill current active credentials (or link Supabase in <code>.env</code> for cloud auth):
+                    Click below to auto-fill current active credentials (or connect Supabase in <code>.env</code>):
                   </p>
                   <button
                     type="button"
@@ -948,9 +881,15 @@ export default function Admin() {
           <span className="admin-nav-logo">RK</span>
           <div>
             <h1>Rajeev Kumar</h1>
-            <span className="admin-nav-badge">
-              {isSupabaseConfigured ? '🟢 Supabase Cloud Active' : '🟡 Local / Preview Mode'}
-            </span>
+            <div className="admin-nav-meta">
+              <span className="admin-nav-badge">
+                {isSupabaseConfigured ? '🟢 Supabase Cloud Active' : '🟡 Local / Preview Mode'}
+              </span>
+              <span className="admin-nav-user-pill">
+                <GoogleLogoSvg />
+                <span>{adminUser.email}</span>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -971,7 +910,7 @@ export default function Admin() {
             className={`admin-tab-btn ${activeTab === 'security' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('security')}
           >
-            🔐 Account Security
+            🔐 Google & Account Security
           </button>
           <button
             className={`admin-tab-btn ${activeTab === 'database' ? 'is-active' : ''}`}
@@ -1323,7 +1262,7 @@ export default function Admin() {
                       type="url"
                       value={formData.instagram}
                       onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-                      placeholder="https://instagram.com/rajeevkumar"
+                      placeholder="https://instagram.com/rajeev_dop"
                     />
                   </label>
                 </div>
@@ -1343,23 +1282,61 @@ export default function Admin() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: ACCOUNT & CREDENTIAL SECURITY */}
+        {/* TAB 3: ACCOUNT & GOOGLE CREDENTIAL SECURITY */}
         {/* ========================================================= */}
         {activeTab === 'security' && (
           <div className="admin-security-section">
             <div className="admin-section-header">
               <div>
-                <h2>Admin Credentials & Security Settings</h2>
-                <p>Change your admin login email and master password with two-step credential verification.</p>
+                <h2>Google Identity & Master Security Settings</h2>
+                <p>Manage Google Single Sign-On, master email address, and security passwords.</p>
+              </div>
+            </div>
+
+            {/* Card 1: Google Identity Status */}
+            <div className="admin-card glass-panel" style={{ marginBottom: '2rem' }}>
+              <div className="admin-card-head-row">
+                <div className="google-status-head">
+                  <GoogleLogoSvg />
+                  <div>
+                    <h3>Google Identity & 2-Factor Authentication</h3>
+                    <p className="admin-subtext">
+                      Portfolio administrator access is protected with Google OAuth and whitelist verification.
+                    </p>
+                  </div>
+                </div>
+                <span className="admin-pill-status">🛡️ Google Verified Active</span>
+              </div>
+
+              <div className="google-authorized-list-box">
+                <p className="authorized-list-title">Authorized Google Owner Accounts:</p>
+                <div className="authorized-accounts-grid">
+                  {AUTHORIZED_ADMIN_EMAILS.map((email) => (
+                    <div key={email} className="authorized-account-card">
+                      <div className="acc-icon-wrap">
+                        <GoogleLogoSvg />
+                      </div>
+                      <div className="acc-info">
+                        <strong>{email}</strong>
+                        <span>
+                          {email.includes('cmrtc')
+                            ? 'Google Workspace (CMRTC Verified)'
+                            : 'Personal Google Account (Verified Owner)'}
+                        </span>
+                      </div>
+                      <span className="acc-status-tag">✓ Authorized</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="admin-grid-2">
               {/* Change Email Card */}
               <div className="admin-card glass-panel">
-                <h3>Change Admin Email</h3>
+                <h3>Change Master Email</h3>
                 <p className="admin-subtext" style={{ marginBottom: '1.2rem' }}>
-                  Verify your current email and password to update to a new login email.
+                  Verify your current email and master password to update to a new login email.
                 </p>
 
                 {emailError && <div className="admin-alert admin-alert--error">{emailError}</div>}
@@ -1379,7 +1356,7 @@ export default function Admin() {
                   </label>
 
                   <label>
-                    Current Password (Verification)
+                    Current Master Password (Verification)
                     <input
                       type="password"
                       required
@@ -1427,7 +1404,7 @@ export default function Admin() {
 
               {/* Change Password Card */}
               <div className="admin-card glass-panel">
-                <h3>Change Admin Password</h3>
+                <h3>Change Master Password</h3>
                 <p className="admin-subtext" style={{ marginBottom: '1.2rem' }}>
                   Verify your registered email and current password to set a new security password.
                 </p>
@@ -1449,7 +1426,7 @@ export default function Admin() {
                   </label>
 
                   <label>
-                    Current Password (Verification)
+                    Current Master Password (Verification)
                     <input
                       type="password"
                       required
@@ -1498,74 +1475,21 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Card 3: Verified Recovery Mobile (Amazon / Flipkart OTP System) */}
+            {/* Architecture Overview */}
             <div className="admin-card glass-panel" style={{ marginTop: '2rem' }}>
-              <div className="admin-card-head-row">
-                <div>
-                  <h3>📱 Verified Recovery Mobile (OTP Recovery)</h3>
-                  <p className="admin-subtext">
-                    Used for instant 6-digit OTP account recovery if you ever forget both your email and password — just like Amazon and Flipkart.
-                  </p>
-                </div>
-                <span className="admin-pill-status">Verified Active</span>
-              </div>
-
-              <div className="admin-verified-phone-box">
-                <span className="verified-phone-label">Current Recovery Phone:</span>
-                <span className="verified-phone-val">{getStoredAdminCredentials().phone || '+91 9100305010'}</span>
-              </div>
-
-              {phoneError && <div className="admin-alert admin-alert--error">{phoneError}</div>}
-              {phoneSuccess && <div className="admin-alert admin-alert--success">{phoneSuccess}</div>}
-
-              <form onSubmit={handleUpdateRecoveryPhone} className="admin-security-form" style={{ marginTop: '1.2rem' }}>
-                <label>
-                  Current Admin Password (Verification)
-                  <input
-                    type="password"
-                    required
-                    value={phoneForm.currentPassword}
-                    onChange={(e) => setPhoneForm({ ...phoneForm, currentPassword: e.target.value })}
-                    placeholder="••••••••••••"
-                    autoComplete="current-password"
-                  />
-                </label>
-
-                <label>
-                  New Recovery Mobile Number
-                  <input
-                    type="tel"
-                    required
-                    value={phoneForm.newPhone}
-                    onChange={(e) => setPhoneForm({ ...phoneForm, newPhone: e.target.value })}
-                    placeholder="+91 9100305010"
-                    autoComplete="tel"
-                  />
-                </label>
-
-                <button
-                  type="submit"
-                  disabled={phoneLoading}
-                  className="glass-btn glass-btn--primary admin-save-btn"
-                  style={{ marginTop: '0.8rem' }}
-                >
-                  {phoneLoading ? 'Verifying & Updating...' : '✓ Update Recovery Mobile'}
-                </button>
-              </form>
-            </div>
-
-            {/* Card 4: Multi-Tier Account Recovery Overview */}
-            <div className="admin-card glass-panel" style={{ marginTop: '2rem' }}>
-              <h3>🔐 Dual-Tier Account Recovery Overview</h3>
+              <h3>🔐 Google Identity Security Architecture</h3>
               <p className="admin-subtext" style={{ marginBottom: '1rem' }}>
-                Your portfolio is equipped with enterprise-grade protection so you never get locked out of your admin dashboard:
+                Your administrative control center is architected according to modern identity standards:
               </p>
               <ul className="admin-recovery-features-list">
                 <li>
-                  <strong>1. Mobile OTP Recovery (Amazon / Flipkart Standard):</strong> If you forget <em>both</em> your email and password, enter your registered mobile number (<code>{getStoredAdminCredentials().phone || '+91 9100305010'}</code>) to receive a secure 6-digit OTP code, reveal your linked admin email, and set a new password.
+                  <strong>1. Google Verified OAuth:</strong> Administrators authenticate using cryptographically signed Google Identity tokens (GIS / OAuth 2.0). Only whitelisted emails can access or modify your portfolio.
                 </li>
                 <li>
-                  <strong>2. Historical Password Verification:</strong> If you know your registered email but forgot your active password, you can reset it instantly by verifying any previous password from your secure password history.
+                  <strong>2. Identity-Backed Password Reset:</strong> Forgotten passwords are reset by verifying ownership of your authorized Google Account. No insecure SMS/OTP interception risks or paradoxical "old password" prompts.
+                </li>
+                <li>
+                  <strong>3. Cloud Database Sync:</strong> When Supabase credentials are configured, changes are synced directly to PostgreSQL tables with row-level security (RLS).
                 </li>
               </ul>
             </div>
@@ -1611,11 +1535,12 @@ export default function Admin() {
                 <li>Add them to your project's <code>.env</code> file:
                   <pre className="admin-code-block">
 {`VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here`}
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com`}
                   </pre>
                 </li>
                 <li>Open the <strong>SQL Editor</strong> in Supabase and run the schema script generated in <code>supabase_schema.sql</code>.</li>
-                <li>Create your Admin User under <strong>Authentication → Users</strong> in Supabase.</li>
+                <li>Under <strong>Authentication → Providers</strong>, enable Google OAuth and add your Google Client ID & Secret.</li>
               </ol>
             </div>
           </div>
