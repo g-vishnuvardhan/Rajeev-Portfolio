@@ -1461,7 +1461,7 @@ blockquote { margin: 0; }
 .contact-head-line { display: block; }
 .contact-head .sub { color: var(--grey); font-size: 0.54em; margin-top: 0.35em; }
 .enquiry-wrap {
-  max-width: 1340px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: clamp(2.5rem, 5vw, 4.5rem) var(--pad);
   width: 100%;
@@ -1476,9 +1476,9 @@ blockquote { margin: 0; }
 .enquiry-flank {
   position: relative;
   z-index: 1;
-  flex: 0 0 clamp(230px, 21vw, 290px);
-  width: clamp(230px, 21vw, 290px);
-  height: clamp(430px, 39vw, 530px);
+  flex: 0 0 320px;
+  width: 320px;
+  height: 568px;
   aspect-ratio: 9 / 16;
   display: flex;
   align-items: center;
@@ -1487,55 +1487,53 @@ blockquote { margin: 0; }
   user-select: none;
 }
 .enquiry-flank--left {
-  margin-right: -24px;
+  margin-right: -16px;
 }
 .enquiry-flank--right {
-  margin-left: -24px;
+  margin-left: -16px;
 }
 .enquiry-video-aura {
   position: absolute;
-  inset: -15%;
+  inset: -12%;
   border-radius: 50%;
-  filter: blur(52px);
-  opacity: 0.38;
+  filter: blur(48px);
+  opacity: 0.35;
   pointer-events: none;
   z-index: 0;
 }
 .enquiry-video-aura--gold {
-  background: radial-gradient(circle, rgba(220, 175, 75, 0.28) 0%, rgba(220, 175, 75, 0.08) 50%, transparent 72%);
+  background: radial-gradient(circle, rgba(220, 175, 75, 0.26) 0%, rgba(220, 175, 75, 0.06) 50%, transparent 72%);
 }
 .enquiry-video-aura--dop {
-  background: radial-gradient(circle, rgba(95, 155, 235, 0.25) 0%, rgba(95, 155, 235, 0.07) 50%, transparent 72%);
+  background: radial-gradient(circle, rgba(95, 155, 235, 0.24) 0%, rgba(95, 155, 235, 0.06) 50%, transparent 72%);
 }
 .enquiry-video-media {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 40px;
+  border-radius: 24px;
   overflow: hidden;
   isolation: isolate;
-  box-shadow: inset 0 0 45px 25px #040407, inset 0 0 85px 45px #040407;
-  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, #000 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%);
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, #000 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, #000 68%, rgba(0, 0, 0, 0.82) 84%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, #000 68%, rgba(0, 0, 0, 0.82) 84%, transparent 100%);
 }
 .enquiry-video-vignette {
   position: absolute;
-  inset: -2px;
+  inset: 0;
   pointer-events: none;
   z-index: 2;
-  border-radius: 40px;
+  border-radius: 24px;
+  background: radial-gradient(ellipse 90% 88% at 50% 50%, transparent 64%, rgba(4, 4, 7, 0.38) 84%, #040407 100%);
 }
 .enquiry-video-vignette--left {
   background:
-    radial-gradient(ellipse 75% 75% at 50% 50%, transparent 18%, rgba(4, 4, 7, 0.5) 48%, rgba(4, 4, 7, 0.98) 78%, #040407 100%),
-    linear-gradient(to bottom, #040407 0%, rgba(4, 4, 7, 0.85) 14%, transparent 28%, transparent 72%, rgba(4, 4, 7, 0.85) 86%, #040407 100%),
-    linear-gradient(to right, #040407 0%, rgba(4, 4, 7, 0.9) 16%, transparent 36%);
+    radial-gradient(ellipse 90% 88% at 50% 50%, transparent 64%, rgba(4, 4, 7, 0.38) 84%, #040407 100%),
+    linear-gradient(to right, rgba(4, 4, 7, 0.5) 0%, transparent 15%);
 }
 .enquiry-video-vignette--right {
   background:
-    radial-gradient(ellipse 75% 75% at 50% 50%, transparent 18%, rgba(4, 4, 7, 0.5) 48%, rgba(4, 4, 7, 0.98) 78%, #040407 100%),
-    linear-gradient(to bottom, #040407 0%, rgba(4, 4, 7, 0.85) 14%, transparent 28%, transparent 72%, rgba(4, 4, 7, 0.85) 86%, #040407 100%),
-    linear-gradient(to left, #040407 0%, rgba(4, 4, 7, 0.9) 16%, transparent 36%);
+    radial-gradient(ellipse 90% 88% at 50% 50%, transparent 64%, rgba(4, 4, 7, 0.38) 84%, #040407 100%),
+    linear-gradient(to left, rgba(4, 4, 7, 0.5) 0%, transparent 15%);
 }
 .enquiry-video {
   position: relative;
@@ -1547,24 +1545,24 @@ blockquote { margin: 0; }
   outline: none;
   box-shadow: none;
   border-radius: 0;
-  opacity: 0.9;
-  filter: contrast(1.05) saturate(1.1);
+  opacity: 0.96;
+  filter: contrast(1.04) saturate(1.08);
 }
 .enquiry {
   position: relative;
   z-index: 2;
-  flex: 0 1 700px;
+  flex: 0 1 580px;
   width: 100%;
-  max-width: 700px;
+  max-width: 580px;
   display: grid;
   gap: 1.25rem;
-  padding: clamp(2rem, 5vw, 3.2rem);
-  background: rgba(14, 14, 18, 0.68);
+  padding: clamp(2rem, 4vw, 2.8rem);
+  background: rgba(14, 14, 18, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 .enquiry h3 { font-family: var(--serif); font-weight: 500; font-size: 1.9rem; }
 .enquiry-row {
@@ -1572,17 +1570,32 @@ blockquote { margin: 0; }
   grid-template-columns: 1fr 1fr;
   gap: 1.2rem;
 }
-@media (max-width: 1080px) {
+@media (max-width: 1200px) {
   .enquiry-flank {
-    flex: 0 0 clamp(180px, 19vw, 230px);
-    width: clamp(180px, 19vw, 230px);
-    height: clamp(330px, 34vw, 410px);
+    flex: 0 0 280px;
+    width: 280px;
+    height: 498px;
+  }
+  .enquiry {
+    flex: 0 1 540px;
+    max-width: 540px;
+  }
+}
+@media (max-width: 1024px) {
+  .enquiry-flank {
+    flex: 0 0 240px;
+    width: 240px;
+    height: 426px;
+  }
+  .enquiry {
+    flex: 0 1 500px;
+    max-width: 500px;
   }
   .enquiry-flank--left {
-    margin-right: -18px;
+    margin-right: -12px;
   }
   .enquiry-flank--right {
-    margin-left: -18px;
+    margin-left: -12px;
   }
 }
 @media (max-width: 768px) {
@@ -1594,11 +1607,11 @@ blockquote { margin: 0; }
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 140px;
-    height: 250px;
+    width: 160px;
+    height: 284px;
     max-height: none;
     z-index: 1;
-    opacity: 0.45;
+    opacity: 0.42;
   }
   .enquiry-flank--left {
     left: -20px;
@@ -1613,7 +1626,7 @@ blockquote { margin: 0; }
     z-index: 2;
     width: 100%;
     max-width: 100%;
-    background: rgba(14, 14, 18, 0.85);
+    background: rgba(14, 14, 18, 0.88);
   }
   .enquiry-row {
     grid-template-columns: 1fr;
