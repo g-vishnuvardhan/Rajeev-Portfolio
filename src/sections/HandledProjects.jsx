@@ -10,10 +10,10 @@ export default function HandledProjects() {
   const [selectedProject, setSelectedProject] = useState(null)
 
   const filterCategories = [
-    { id: 'all', label: 'All Projects (8)' },
-    { id: 'fashion', label: 'Fashion & Silks (4)' },
-    { id: 'jewellery', label: 'Jewellery Films (2)' },
-    { id: 'lifestyle', label: 'Culinary & Lifestyle (2)' },
+    { id: 'all', label: 'All Projects' },
+    { id: 'fashion', label: 'Fashion & Silks' },
+    { id: 'jewellery', label: 'Jewellery Films' },
+    { id: 'lifestyle', label: 'Culinary & Lifestyle' },
   ]
 
   const filteredProjects = handledProjects.filter((p) => {
@@ -86,7 +86,7 @@ export default function HandledProjects() {
         <div className="handled-eyebrow">
           <span className="handled-badge">COMMERCIAL PORTFOLIO</span>
           <span className="handled-dot" aria-hidden="true" />
-          <span className="handled-count">8 HANDLED CLIENT PROJECTS</span>
+          <span className="handled-count">HANDLED CLIENT PROJECTS</span>
         </div>
         <h2>
           Handled Projects & <span className="serif-italic">Fashion Campaigns</span>
@@ -108,7 +108,6 @@ export default function HandledProjects() {
               role="button"
               tabIndex={0}
             >
-              <span className="runway-idx">{String((idx % handledProjects.length) + 1).padStart(2, '0')}</span>
               <span className="runway-logo-box">
                 <img src={project.image} alt={project.name} loading="lazy" />
               </span>
@@ -135,7 +134,7 @@ export default function HandledProjects() {
 
       {/* High-Fashion Editorial Project Grid */}
       <div className="handled-grid">
-        {filteredProjects.map((project, idx) => (
+        {filteredProjects.map((project) => (
           <article
             key={project.id}
             className="handled-card"
@@ -146,7 +145,7 @@ export default function HandledProjects() {
           >
             {/* Editorial Header */}
             <div className="card-top-bar">
-              <span className="card-catalog">PROJECT {String(idx + 1).padStart(2, '0')} / 08</span>
+              <span className="card-catalog">COMMERCIAL CAMPAIGN</span>
               <span className="card-year">{project.year}</span>
             </div>
 

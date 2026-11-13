@@ -16,14 +16,12 @@ export default function Contact() {
       y: 42, opacity: 0, duration: 1.0, ease: 'expo.out',
       scrollTrigger: { trigger: '.enquiry-wrap', start: 'top 84%' },
     })
-    // cinematic closing: letterbox bars close in, image zooms, reveal name
+    // seamless closing reveal: image smoothly merges into the page atmosphere
     const tl = gsap.timeline({
       scrollTrigger: { trigger: '.closing', start: 'top 85%', end: 'bottom bottom', scrub: true },
     })
-    tl.fromTo('.bar-top', { yPercent: -100 }, { yPercent: 0, ease: 'none' }, 0)
-      .fromTo('.bar-bottom', { yPercent: 100 }, { yPercent: 0, ease: 'none' }, 0)
-      .fromTo('.closing-img', { scale: 1.12 }, { scale: 1.0, ease: 'none' }, 0)
-      .fromTo('.closing-card', { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, ease: 'none' }, 0.35)
+    tl.fromTo('.closing-img', { scale: 1.08, opacity: 0.65 }, { scale: 1.0, opacity: 1, ease: 'none' }, 0)
+      .fromTo('.closing-card', { opacity: 0, y: 32 }, { opacity: 1, y: 0, ease: 'none' }, 0.2)
 
     gsap.from('.closing-contact-item', {
       y: 26, opacity: 0, duration: 0.8, stagger: 0.08, ease: 'power3.out',
@@ -81,8 +79,6 @@ export default function Contact() {
       </div>
 
       <div className="closing">
-        <div className="bar bar-top" />
-        <div className="bar bar-bottom" />
         <div className="closing-media">
           <img
             src="/photos/closing-portrait.png"
