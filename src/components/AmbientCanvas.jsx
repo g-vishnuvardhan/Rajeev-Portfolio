@@ -70,8 +70,8 @@ export default function AmbientCanvas() {
       // Subtle interactive volumetric cursor halo
       if (!env.mobile) {
         const g = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 260)
-        g.addColorStop(0, 'rgba(224, 176, 116, 0.055)')
-        g.addColorStop(0.5, 'rgba(208, 86, 48, 0.02)')
+        g.addColorStop(0, 'rgba(252, 250, 244, 0.045)')
+        g.addColorStop(0.5, 'rgba(246, 242, 232, 0.015)')
         g.addColorStop(1, 'rgba(0, 0, 0, 0)')
         ctx.fillStyle = g
         ctx.fillRect(0, 0, w, h)
@@ -94,9 +94,10 @@ export default function AmbientCanvas() {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r + boost * 1.2, 0, Math.PI * 2)
+        const a = (p.alpha + boost) * 0.85
         ctx.fillStyle = p.warm
-          ? `rgba(224, 176, 116, ${p.alpha + boost})`
-          : `rgba(244, 242, 238, ${(p.alpha + boost) * 0.7})`
+          ? `rgba(254, 252, 246, ${a})`
+          : `rgba(248, 245, 236, ${a * 0.8})`
         ctx.fill()
       }
 

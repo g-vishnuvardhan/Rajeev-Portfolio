@@ -17,14 +17,12 @@ const getLayoutTarget = (layout, index, count) => {
     }
     case 'helix': {
       const a = (idx / count) * Math.PI * 2
-      const y = (idx - (count - 1) / 2) * 1.6
+      const y = (idx - (count - 1) / 2) * 1.45
       return { rx: 0, ry: -a, px: 0, py: -y, pz: layoutZ.helix }
     }
     case 'tunnel': {
-      const side = idx % 2 === 0 ? -1 : 1
-      const px = -side * 2.2
-      const pz = idx * 3.2
-      return { rx: 0, ry: 0, px, py: 0, pz: layoutZ.tunnel + pz }
+      const pz = idx * 3.4
+      return { rx: 0, ry: 0, px: 0, py: 0, pz: layoutZ.tunnel + pz }
     }
     case 'arc': {
       const t = idx - (count - 1) / 2
@@ -62,31 +60,68 @@ function Photo({ item, index, count, layout, activeIndex, mobile, onOpen, onHove
   const mesh = useRef()
   const mat = useRef()
   const hovered = useRef(false)
-  const born = useRef(null)
+  const currentOpacity = useRef(1)
   const { p, r } = useMemo(() => layouts[layout](index, count), [layout, index, count])
-  const h = mobile ? 2.5 : 2.85
-  const w = Math.min(h * item.ratio, mobile ? 3.9 : 4.4)
+  const h = mobile ? 2.0 : 2.25
+  const w = Math.min(h * item.ratio, mobile ? 3.4 : 3.9)
 
   const isActive = index === activeIndex
+  const isTunnel = layout === 'tunnel'
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime
     if (born.current === null) born.current = t
     const k = Math.min(1, Math.max(0, (t - born.current - index * 0.07) / 0.9))
     const ease = 1 - Math.pow(1 - k, 3)
-    const scaleFactor = hovered.current ? 1.14 : (isActive ? 1.08 : 0.84)
-    const target = scaleFactor * ease
-    mesh.current.scale.setScalar(lerp(mesh.current.scale.x, Math.max(target, 0.001), 0.12))
-    mesh.current.position.y = p[1] + Math.sin(t * 0.6 + index) * 0.04
-    const targetZ = p[2] + (isActive ? (layout === 'helix' ? 1.4 : 0.8) : 0)
-    mesh.current.position.z = lerp(mesh.current.position.z, targetZ, 0.1)
 
-    if (layout === 'tunnel') {
-      const targetRy = isActive ? 0 : r[1]
+    let targetX = p[0]
+    let targetY = p[1]
+    let targetZ = p[2]
+    let targetRy = r[1]
+    let targetOpacity = 1.0
+    let scaleTarget = hovered.current ? 1.08 : (isActive ? 1.0 : 0.82)
+
+    if (isTunnel) {
+      const rel = index - activeIndex
+      if (rel < 0) {
+        // Frame has already passed: smoothly fade to 0 so it NEVER blocks camera or active frame
+        targetOpacity = 0.0
+        scaleTarget = 0.75
+        targetX = p[0]
+      } else if (rel === 0) {
+        // Active frame: glide to dead-center, flat to camera, 100% opacity
+        targetX = 0
+        targetY = 0
+        targetRy = 0
+        targetZ = p[2] + 0.35
+        targetOpacity = 1.0
+        scaleTarget = hovered.current ? 1.08 : 1.0
+      } else {
+        // Future frames: wait on flanks, layered depth opacity
+        targetX = p[0]
+        targetOpacity = Math.max(0, 1.0 - rel * 0.28)
+        scaleTarget = Math.max(0.7, 0.9 - rel * 0.05)
+      }
       mesh.current.rotation.y = lerp(mesh.current.rotation.y, targetRy, 0.1)
+    } else {
+      // Helix / Arc / Ring
+      targetZ = p[2] + (isActive ? 0.4 : 0)
+      targetOpacity = isActive || hovered.current ? 1.0 : 0.65
     }
 
-    const targetBrightness = hovered.current || isActive ? 1.0 : 0.55
+    const scale = scaleTarget * ease
+    mesh.current.scale.setScalar(lerp(mesh.current.scale.x, Math.max(scale, 0.001), 0.12))
+
+    const floatY = Math.sin(t * 0.6 + index) * 0.03
+    mesh.current.position.x = lerp(mesh.current.position.x, targetX, 0.1)
+    mesh.current.position.y = lerp(mesh.current.position.y, targetY + floatY, 0.1)
+    mesh.current.position.z = lerp(mesh.current.position.z, targetZ, 0.1)
+
+    currentOpacity.current = lerp(currentOpacity.current, targetOpacity, 0.12)
+    mat.current.opacity = currentOpacity.current
+    mesh.current.visible = currentOpacity.current > 0.01
+
+    const targetBrightness = hovered.current || isActive ? 1.0 : 0.6
     const c = lerp(mat.current.color.r, targetBrightness, 0.12)
     mat.current.color.setScalar(c)
   })
@@ -114,7 +149,7 @@ function Photo({ item, index, count, layout, activeIndex, mobile, onOpen, onHove
       }}
     >
       <planeGeometry args={[w, h]} />
-      <meshBasicMaterial ref={mat} map={tex} toneMapped={false} side={THREE.DoubleSide} />
+      <meshBasicMaterial ref={mat} map={tex} transparent toneMapped={false} side={THREE.DoubleSide} />
     </mesh>
   )
 }
@@ -152,7 +187,7 @@ export default function GalleryScene({ items, layout, activeIndex, visible, mobi
       <Canvas
         frameloop={visible ? 'always' : 'never'}
         dpr={[1, mobile ? 1.5 : 2]}
-        camera={{ position: [0, 0, mobile ? 12 : 8.2], fov: 45 }}
+        camera={{ position: [0, 0, mobile ? 12 : 9.0], fov: 45 }}
         gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
         aria-hidden="true"
       >
