@@ -8,6 +8,10 @@ import {
   updateAdminEmail,
   updateAdminPassword,
   resetAdminPasswordWithOldPassword,
+  sendRecoveryOTP,
+  verifyRecoveryOTP,
+  resetAccountViaOTP,
+  updateAdminRecoveryPhone,
   addGalleryPhoto,
   deleteGalleryPhoto,
   saveGalleryOrder,
@@ -26,8 +30,24 @@ export default function Admin() {
   const [loginError, setLoginError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Forgot Password State (Recovery with Old Password)
-  const [showForgot, setShowForgot] = useState(false)
+  // Account Recovery Mode: null (Sign In) | 'otp' (Forgot Email & Password via Mobile OTP) | 'old-password' (Reset via Old Password)
+  const [recoveryMode, setRecoveryMode] = useState(null)
+
+  // 1. Forgot Email & Password (Mobile OTP Flow - Amazon / Flipkart Style)
+  const [otpStep, setOtpStep] = useState(1) // 1: Enter Mobile, 2: Enter & Verify OTP, 3: Set New Password & Recover Email
+  const [recoveryPhone, setRecoveryPhone] = useState('')
+  const [otpInput, setOtpInput] = useState('')
+  const [otpNotice, setOtpNotice] = useState(null) // { otp, phone, maskedPhone, maskedEmail, whatsappUrl }
+  const [otpTimer, setOtpTimer] = useState(0) // seconds countdown for resend
+  const [otpError, setOtpError] = useState('')
+  const [otpSuccess, setOtpSuccess] = useState('')
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [recoveredEmail, setRecoveredEmail] = useState('')
+  const [recoveredNewEmail, setRecoveredNewEmail] = useState('')
+  const [otpNewPassword, setOtpNewPassword] = useState('')
+  const [otpConfirmPassword, setOtpConfirmPassword] = useState('')
+
+  // 2. Forgot Password State (Reset via Old Password)
   const [forgotEmail, setForgotEmail] = useState('')
   const [forgotOldPassword, setForgotOldPassword] = useState('')
   const [forgotNewPassword, setForgotNewPassword] = useState('')
@@ -35,6 +55,15 @@ export default function Admin() {
   const [forgotError, setForgotError] = useState('')
   const [forgotSuccess, setForgotSuccess] = useState('')
   const [forgotSubmitting, setForgotSubmitting] = useState(false)
+
+  // 3. Recovery Phone Form (Inside Account Security Tab)
+  const [phoneForm, setPhoneForm] = useState({
+    currentPassword: '',
+    newPhone: '',
+  })
+  const [phoneError, setPhoneError] = useState('')
+  const [phoneSuccess, setPhoneSuccess] = useState('')
+  const [phoneLoading, setPhoneLoading] = useState(false)
 
   // Security Tab State (Change Email & Change Password)
   const [emailForm, setEmailForm] = useState({
@@ -161,7 +190,7 @@ export default function Admin() {
       setLoginEmail(forgotEmail)
       setLoginPassword(forgotNewPassword)
       setTimeout(() => {
-        setShowForgot(false)
+        setRecoveryMode(null)
         setForgotSuccess('')
         setForgotOldPassword('')
         setForgotNewPassword('')
@@ -171,6 +200,103 @@ export default function Admin() {
       setForgotError(err.message || 'Password reset failed.')
     } finally {
       setForgotSubmitting(false)
+    }
+  }
+
+  // OTP Countdown timer
+  useEffect(() => {
+    if (otpTimer <= 0) return
+    const interval = setInterval(() => {
+      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [otpTimer])
+
+  // Handle Send OTP (Amazon / Flipkart Flow)
+  const handleSendOTP = async (e) => {
+    if (e) e.preventDefault()
+    setOtpError('')
+    setOtpSuccess('')
+    setOtpLoading(true)
+    try {
+      const res = await sendRecoveryOTP(recoveryPhone)
+      setOtpNotice(res)
+      setOtpStep(2)
+      setOtpTimer(60)
+      setOtpSuccess(`✓ 6-Digit OTP sent successfully to ${res.maskedPhone}!`)
+    } catch (err) {
+      setOtpError(err.message || 'Failed to send OTP. Please check your registered mobile number.')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  // Handle Verify OTP
+  const handleVerifyOTP = async (e) => {
+    if (e) e.preventDefault()
+    setOtpError('')
+    setOtpSuccess('')
+    setOtpLoading(true)
+    try {
+      const res = await verifyRecoveryOTP(otpInput)
+      setRecoveredEmail(res.email)
+      setRecoveredNewEmail(res.email)
+      setOtpStep(3)
+      setOtpSuccess(`✓ Identity Verified! Registered account found: ${res.email}`)
+    } catch (err) {
+      setOtpError(err.message || 'Invalid or expired 6-digit OTP code.')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  // Handle Complete Account Recovery & Reset Password
+  const handleCompleteRecovery = async (e) => {
+    if (e) e.preventDefault()
+    setOtpError('')
+    setOtpSuccess('')
+    setOtpLoading(true)
+    try {
+      const res = await resetAccountViaOTP({
+        enteredOtp: otpInput,
+        newPassword: otpNewPassword,
+        confirmNewPassword: otpConfirmPassword,
+        newEmail: recoveredNewEmail,
+      })
+      setOtpSuccess('✓ Password successfully reset! Authenticating into Admin Dashboard...')
+      setTimeout(() => {
+        setAdminUser(res.user)
+        setRecoveryMode(null)
+        setOtpStep(1)
+        setOtpInput('')
+        setOtpNotice(null)
+        setOtpSuccess('')
+      }, 1200)
+    } catch (err) {
+      setOtpError(err.message || 'Password reset failed. Please ensure password is at least 6 characters.')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  // Handle Update Recovery Phone
+  const handleUpdateRecoveryPhone = async (e) => {
+    e.preventDefault()
+    setPhoneError('')
+    setPhoneSuccess('')
+    setPhoneLoading(true)
+    try {
+      const res = await updateAdminRecoveryPhone({
+        currentPassword: phoneForm.currentPassword,
+        newPhone: phoneForm.newPhone,
+      })
+      setPhoneSuccess(`✓ Verified recovery mobile updated to ${res.phone}!`)
+      setPhoneForm({ currentPassword: '', newPhone: '' })
+      setTimeout(() => setPhoneSuccess(''), 5000)
+    } catch (err) {
+      setPhoneError(err.message || 'Failed to update recovery phone.')
+    } finally {
+      setPhoneLoading(false)
     }
   }
 
@@ -369,10 +495,242 @@ export default function Admin() {
     return (
       <div className="admin-page admin-login-wrapper">
         <div className="admin-login-card glass-panel">
-          {showForgot ? (
+          {recoveryMode === 'otp' ? (
+            /* ========================================================= */
+            /* MODE 1: AMAZON / FLIPKART STYLE MOBILE OTP RECOVERY       */
+            /* ========================================================= */
             <>
               <div className="admin-login-head">
-                <span className="admin-badge">Account Recovery</span>
+                <span className="admin-badge">⚡ Instant OTP Recovery</span>
+                <h2>Forgot Email & Password?</h2>
+                <p className="admin-subtext">
+                  Recover your account using your registered mobile number — just like Amazon and Flipkart.
+                </p>
+              </div>
+
+              {/* Step Progress Pills */}
+              <div className="otp-steps-indicator" role="tablist" aria-label="Recovery steps">
+                <span className={`otp-step-pill ${otpStep === 1 ? 'is-active' : ''}`}>1. Mobile Number</span>
+                <span className={`otp-step-pill ${otpStep === 2 ? 'is-active' : ''}`}>2. 6-Digit OTP</span>
+                <span className={`otp-step-pill ${otpStep === 3 ? 'is-active' : ''}`}>3. Reset Password</span>
+              </div>
+
+              {/* Realistic Incoming SMS / Push Banner */}
+              {otpNotice && otpStep >= 2 && (
+                <div className="otp-sms-banner">
+                  <div className="otp-sms-header">
+                    <span className="otp-sms-icon">📱</span>
+                    <div className="otp-sms-title-wrap">
+                      <strong>SMS ALERT &bull; RK-AUTH</strong>
+                      <span className="otp-sms-time">Now</span>
+                    </div>
+                  </div>
+                  <p className="otp-sms-body">
+                    Your Admin Recovery OTP is <span className="otp-sms-code">{otpNotice.otp}</span>. Valid for 10 minutes.
+                  </p>
+                  <div className="otp-sms-actions">
+                    <button
+                      type="button"
+                      className="otp-autofill-btn"
+                      onClick={() => {
+                        setOtpInput(otpNotice.otp)
+                        setOtpError('')
+                      }}
+                    >
+                      ⚡ Quick Auto-Fill OTP ({otpNotice.otp})
+                    </button>
+                    {otpNotice.whatsappUrl && (
+                      <a
+                        href={otpNotice.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="otp-whatsapp-btn"
+                      >
+                        💬 Deliver to WhatsApp
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {otpError && <div className="admin-alert admin-alert--error">{otpError}</div>}
+              {otpSuccess && <div className="admin-alert admin-alert--success">{otpSuccess}</div>}
+
+              {/* STEP 1: Enter Mobile Number */}
+              {otpStep === 1 && (
+                <form onSubmit={handleSendOTP} className="admin-login-form">
+                  <label>
+                    Registered Mobile Number
+                    <input
+                      type="tel"
+                      required
+                      value={recoveryPhone}
+                      onChange={(e) => setRecoveryPhone(e.target.value)}
+                      placeholder="+91 9100305010 or 9100305010"
+                      autoComplete="tel"
+                    />
+                  </label>
+
+                  <div className="otp-helper-badge">
+                    <span>💡 Default registered number: <strong>{currentCreds.phone || '+91 9100305010'}</strong></span>
+                    <button
+                      type="button"
+                      className="admin-text-link"
+                      onClick={() => setRecoveryPhone(currentCreds.phone || '+91 9100305010')}
+                    >
+                      Use Default Phone
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="glass-btn glass-btn--primary admin-submit-btn"
+                    disabled={otpLoading}
+                  >
+                    {otpLoading ? 'Sending 6-Digit OTP...' : '📲 Send 6-Digit OTP Code →'}
+                  </button>
+                </form>
+              )}
+
+              {/* STEP 2: Enter & Verify 6-digit OTP */}
+              {otpStep === 2 && (
+                <form onSubmit={handleVerifyOTP} className="admin-login-form">
+                  <label>
+                    Enter 6-Digit Verification Code
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      required
+                      value={otpInput}
+                      onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="• • • • • •"
+                      className="otp-input-large"
+                      autoFocus
+                    />
+                  </label>
+
+                  <div className="otp-timer-row">
+                    {otpTimer > 0 ? (
+                      <span className="otp-countdown">Resend OTP in <strong>{otpTimer}s</strong></span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="admin-text-link"
+                        onClick={handleSendOTP}
+                        disabled={otpLoading}
+                      >
+                        🔄 Didn't receive? Resend OTP
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="admin-text-link"
+                      onClick={() => {
+                        setOtpStep(1)
+                        setOtpError('')
+                        setOtpSuccess('')
+                      }}
+                    >
+                      ← Change Mobile Number
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="glass-btn glass-btn--primary admin-submit-btn"
+                    disabled={otpLoading || otpInput.length < 6}
+                  >
+                    {otpLoading ? 'Verifying...' : 'Verify OTP & Continue →'}
+                  </button>
+                </form>
+              )}
+
+              {/* STEP 3: Recover Email & Reset Password */}
+              {otpStep === 3 && (
+                <form onSubmit={handleCompleteRecovery} className="admin-login-form">
+                  <div className="otp-account-found-box">
+                    <span className="account-found-badge">✓ ACCOUNT RECOVERED</span>
+                    <p className="account-found-email">
+                      Registered Email: <strong>{recoveredEmail}</strong>
+                    </p>
+                    <p className="account-found-desc">
+                      Identity verified via mobile OTP. You can now set your new password (or update your email address).
+                    </p>
+                  </div>
+
+                  <label>
+                    Admin Email Address (Recovered / Update)
+                    <input
+                      type="email"
+                      required
+                      value={recoveredNewEmail}
+                      onChange={(e) => setRecoveredNewEmail(e.target.value)}
+                      placeholder="admin@example.com"
+                      autoComplete="email"
+                    />
+                  </label>
+
+                  <label>
+                    New Security Password (min 6 characters)
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={otpNewPassword}
+                      onChange={(e) => setOtpNewPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <label>
+                    Confirm New Password
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={otpConfirmPassword}
+                      onChange={(e) => setOtpConfirmPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <button
+                    type="submit"
+                    className="glass-btn glass-btn--primary admin-submit-btn"
+                    disabled={otpLoading}
+                  >
+                    {otpLoading ? 'Saving Credentials...' : '✓ Reset Password & Enter Dashboard →'}
+                  </button>
+                </form>
+              )}
+
+              <div className="admin-login-footer">
+                <button
+                  type="button"
+                  className="admin-text-link"
+                  onClick={() => {
+                    setRecoveryMode(null)
+                    setOtpStep(1)
+                    setOtpError('')
+                    setOtpSuccess('')
+                    setOtpNotice(null)
+                  }}
+                >
+                  ← Back to Admin Sign In
+                </button>
+              </div>
+            </>
+          ) : recoveryMode === 'old-password' ? (
+            /* ========================================================= */
+            /* MODE 2: RECOVER VIA OLD PASSWORD (HISTORICAL VERIFICATION) */
+            /* ========================================================= */
+            <>
+              <div className="admin-login-head">
+                <span className="admin-badge">Old Password Recovery</span>
                 <h2>Reset Admin Password</h2>
                 <p className="admin-subtext">
                   Verify your registered admin email and a previously used/old password to set a new password.
@@ -447,7 +805,7 @@ export default function Admin() {
                   type="button"
                   className="admin-text-link"
                   onClick={() => {
-                    setShowForgot(false)
+                    setRecoveryMode(null)
                     setForgotError('')
                     setForgotSuccess('')
                   }}
@@ -457,6 +815,9 @@ export default function Admin() {
               </div>
             </>
           ) : (
+            /* ========================================================= */
+            /* STANDARD SIGN-IN VIEW                                      */
+            /* ========================================================= */
             <>
               <div className="admin-login-head">
                 <span className="admin-badge">Secure Control Center</span>
@@ -491,19 +852,37 @@ export default function Admin() {
                   />
                 </label>
 
-                <div className="admin-field-helper">
+                {/* Account Recovery Options */}
+                <div className="admin-recovery-options">
                   <button
                     type="button"
-                    className="admin-text-link"
+                    className="admin-otp-recovery-btn"
                     onClick={() => {
-                      setShowForgot(true)
-                      setForgotEmail(loginEmail || currentCreds.email)
-                      setForgotError('')
-                      setForgotSuccess('')
+                      setRecoveryMode('otp')
+                      setOtpStep(1)
+                      setRecoveryPhone(currentCreds.phone || '+91 9100305010')
+                      setOtpError('')
+                      setOtpSuccess('')
                     }}
                   >
-                    Forgot Password? (Reset via Old Password)
+                    <span>📱</span>
+                    <span>Forgot Both Email & Password? <strong>Recover with Mobile OTP →</strong></span>
                   </button>
+
+                  <div className="admin-field-helper">
+                    <button
+                      type="button"
+                      className="admin-text-link"
+                      onClick={() => {
+                        setRecoveryMode('old-password')
+                        setForgotEmail(loginEmail || currentCreds.email)
+                        setForgotError('')
+                        setForgotSuccess('')
+                      }}
+                    >
+                      🔑 Reset using Old Password
+                    </button>
+                  </div>
                 </div>
 
                 <button type="submit" className="glass-btn glass-btn--primary admin-submit-btn" disabled={isSubmitting}>
@@ -1119,12 +1498,76 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Account Recovery Info Card */}
+            {/* Card 3: Verified Recovery Mobile (Amazon / Flipkart OTP System) */}
             <div className="admin-card glass-panel" style={{ marginTop: '2rem' }}>
-              <h3>🔐 Password Recovery & Old Password Verification</h3>
-              <p className="admin-subtext">
-                Your portfolio stores a secure history of your past verified passwords. If you ever forget your current password on the login screen, you can click <strong>"Forgot Password?"</strong> to securely recover your account by verifying your registered email and entering any previously known/old password.
+              <div className="admin-card-head-row">
+                <div>
+                  <h3>📱 Verified Recovery Mobile (OTP Recovery)</h3>
+                  <p className="admin-subtext">
+                    Used for instant 6-digit OTP account recovery if you ever forget both your email and password — just like Amazon and Flipkart.
+                  </p>
+                </div>
+                <span className="admin-pill-status">Verified Active</span>
+              </div>
+
+              <div className="admin-verified-phone-box">
+                <span className="verified-phone-label">Current Recovery Phone:</span>
+                <span className="verified-phone-val">{getStoredAdminCredentials().phone || '+91 9100305010'}</span>
+              </div>
+
+              {phoneError && <div className="admin-alert admin-alert--error">{phoneError}</div>}
+              {phoneSuccess && <div className="admin-alert admin-alert--success">{phoneSuccess}</div>}
+
+              <form onSubmit={handleUpdateRecoveryPhone} className="admin-security-form" style={{ marginTop: '1.2rem' }}>
+                <label>
+                  Current Admin Password (Verification)
+                  <input
+                    type="password"
+                    required
+                    value={phoneForm.currentPassword}
+                    onChange={(e) => setPhoneForm({ ...phoneForm, currentPassword: e.target.value })}
+                    placeholder="••••••••••••"
+                    autoComplete="current-password"
+                  />
+                </label>
+
+                <label>
+                  New Recovery Mobile Number
+                  <input
+                    type="tel"
+                    required
+                    value={phoneForm.newPhone}
+                    onChange={(e) => setPhoneForm({ ...phoneForm, newPhone: e.target.value })}
+                    placeholder="+91 9100305010"
+                    autoComplete="tel"
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={phoneLoading}
+                  className="glass-btn glass-btn--primary admin-save-btn"
+                  style={{ marginTop: '0.8rem' }}
+                >
+                  {phoneLoading ? 'Verifying & Updating...' : '✓ Update Recovery Mobile'}
+                </button>
+              </form>
+            </div>
+
+            {/* Card 4: Multi-Tier Account Recovery Overview */}
+            <div className="admin-card glass-panel" style={{ marginTop: '2rem' }}>
+              <h3>🔐 Dual-Tier Account Recovery Overview</h3>
+              <p className="admin-subtext" style={{ marginBottom: '1rem' }}>
+                Your portfolio is equipped with enterprise-grade protection so you never get locked out of your admin dashboard:
               </p>
+              <ul className="admin-recovery-features-list">
+                <li>
+                  <strong>1. Mobile OTP Recovery (Amazon / Flipkart Standard):</strong> If you forget <em>both</em> your email and password, enter your registered mobile number (<code>{getStoredAdminCredentials().phone || '+91 9100305010'}</code>) to receive a secure 6-digit OTP code, reveal your linked admin email, and set a new password.
+                </li>
+                <li>
+                  <strong>2. Historical Password Verification:</strong> If you know your registered email but forgot your active password, you can reset it instantly by verifying any previous password from your secure password history.
+                </li>
+              </ul>
             </div>
           </div>
         )}

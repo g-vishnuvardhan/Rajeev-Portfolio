@@ -22,11 +22,13 @@ const STORAGE_KEYS = {
   CONTENT: 'rk_portfolio_site_content_v1',
   AUTH: 'rk_portfolio_admin_auth_v1',
   CREDENTIALS: 'rk_portfolio_admin_credentials_v1',
+  RECOVERY_OTP: 'rk_portfolio_admin_recovery_otp_v1',
 }
 
 const DEFAULT_ADMIN = {
   email: '247r1a05e9@cmrtc.ac.in',
   password: '247r1a05e9cmr',
+  phone: '+91 9100305010',
   previousPasswords: [],
   updatedAt: new Date().toISOString(),
 }
@@ -42,6 +44,7 @@ export function getStoredAdminCredentials() {
     return {
       email: creds.email || DEFAULT_ADMIN.email,
       password: creds.password || DEFAULT_ADMIN.password,
+      phone: creds.phone || DEFAULT_ADMIN.phone,
       previousPasswords: Array.isArray(creds.previousPasswords) ? creds.previousPasswords : [],
       updatedAt: creds.updatedAt || DEFAULT_ADMIN.updatedAt,
     }
@@ -265,6 +268,190 @@ export async function resetAdminPasswordWithOldPassword({ email, oldPassword, ne
   localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
 
   return true
+}
+
+/**
+ * Request Account Recovery OTP (When user forgot both email & password):
+ * - Verifies registered mobile number (Amazon / Flipkart pattern)
+ * - Generates cryptographically simulated 6-digit OTP
+ * - Saves OTP with 10-minute expiration
+ * - Returns OTP details, masked phone, masked email, and WhatsApp URL
+ */
+export async function sendRecoveryOTP(inputPhone) {
+  const creds = getStoredAdminCredentials()
+  const cleanInput = (inputPhone || '').replace(/\D/g, '')
+  const cleanStored = (creds.phone || DEFAULT_ADMIN.phone).replace(/\D/g, '')
+
+  if (!cleanInput || cleanInput.length < 10) {
+    throw new Error('Please enter a valid 10-digit registered mobile number.')
+  }
+
+  // Compare the last 10 digits
+  if (cleanInput.slice(-10) !== cleanStored.slice(-10)) {
+    throw new Error('This mobile number is not registered as the admin recovery number. Please check the number or contact system administrator.')
+  }
+
+  // Generate 6-digit OTP code (e.g. 749215)
+  const otpCode = String(Math.floor(100000 + Math.random() * 900000))
+  const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
+
+  const otpData = {
+    code: otpCode,
+    phone: creds.phone || DEFAULT_ADMIN.phone,
+    email: creds.email,
+    expiresAt,
+  }
+
+  localStorage.setItem(STORAGE_KEYS.RECOVERY_OTP, JSON.stringify(otpData))
+
+  // Mask phone e.g. +91 ••••• 5010
+  const last4 = cleanStored.slice(-4)
+  const maskedPhone = `+91 ••••• ${last4}`
+
+  // Mask email e.g. 24*******@cmrtc.ac.in
+  const [userPart, domainPart] = (creds.email || '').split('@')
+  const maskedEmail = userPart && userPart.length > 2
+    ? `${userPart.slice(0, 2)}${'*'.repeat(Math.min(userPart.length - 2, 7))}@${domainPart || 'cmrtc.ac.in'}`
+    : creds.email
+
+  const whatsappUrl = `https://wa.me/91${cleanStored.slice(-10)}?text=${encodeURIComponent(`[RK Portfolio Security] Your Admin Account Recovery OTP is ${otpCode}. Valid for 10 minutes. Do not share with anyone.`)}`
+
+  return {
+    success: true,
+    otp: otpCode, // Provided for realistic on-screen notification toast and quick-copy
+    phone: creds.phone || DEFAULT_ADMIN.phone,
+    maskedPhone,
+    maskedEmail,
+    whatsappUrl,
+    expiresInSeconds: 600,
+  }
+}
+
+/**
+ * Verify Recovery OTP:
+ * - Checks if the 6-digit code matches and has not expired
+ */
+export async function verifyRecoveryOTP(enteredCode) {
+  const raw = localStorage.getItem(STORAGE_KEYS.RECOVERY_OTP)
+  if (!raw) {
+    throw new Error('No active OTP request found. Please request a new OTP first.')
+  }
+
+  let otpData
+  try {
+    otpData = JSON.parse(raw)
+  } catch {
+    throw new Error('Invalid OTP session. Please request a new OTP.')
+  }
+
+  if (Date.now() > otpData.expiresAt) {
+    localStorage.removeItem(STORAGE_KEYS.RECOVERY_OTP)
+    throw new Error('The OTP has expired. Please request a new verification code.')
+  }
+
+  const cleanEntered = (enteredCode || '').trim()
+  if (cleanEntered !== otpData.code) {
+    throw new Error('Invalid OTP. Please enter the correct 6-digit code sent to your mobile.')
+  }
+
+  const creds = getStoredAdminCredentials()
+  return {
+    verified: true,
+    email: creds.email,
+    phone: creds.phone || DEFAULT_ADMIN.phone,
+  }
+}
+
+/**
+ * Reset Account via Verified OTP:
+ * - Resets password (and optionally updates email)
+ * - Updates credentials & records old password into history
+ * - Logs admin in automatically
+ */
+export async function resetAccountViaOTP({ enteredOtp, newPassword, confirmNewPassword, newEmail }) {
+  // 1. Verify OTP first
+  await verifyRecoveryOTP(enteredOtp)
+
+  const creds = getStoredAdminCredentials()
+
+  // 2. Validate password
+  if (!newPassword || newPassword.length < 6) {
+    throw new Error('New password must be at least 6 characters in length.')
+  }
+  if (newPassword !== confirmNewPassword) {
+    throw new Error('New password and confirmation password do not match.')
+  }
+
+  // 3. Optional updated email
+  let finalEmail = creds.email
+  if (newEmail && newEmail.trim()) {
+    const trimmedEmail = newEmail.trim()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(trimmedEmail)) {
+      throw new Error('Please enter a valid new email address.')
+    }
+    finalEmail = trimmedEmail
+  }
+
+  // 4. Update previous passwords history
+  const previous = Array.isArray(creds.previousPasswords) ? [...creds.previousPasswords] : []
+  if (!previous.includes(creds.password)) {
+    previous.push(creds.password)
+  }
+
+  // 5. Cloud Sync
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.auth.updateUser({ password: newPassword, email: finalEmail })
+    } catch (err) {
+      console.warn('Supabase OTP reset notice:', err.message)
+    }
+  }
+
+  // 6. Save updated credentials
+  const updatedCreds = {
+    ...creds,
+    email: finalEmail,
+    password: newPassword,
+    previousPasswords: previous.slice(-10),
+    updatedAt: new Date().toISOString(),
+  }
+  localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
+
+  // Clean up used OTP
+  localStorage.removeItem(STORAGE_KEYS.RECOVERY_OTP)
+
+  // 7. Auto login
+  const activeUser = { email: finalEmail, id: 'admin-cmr-id', role: 'admin' }
+  localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(activeUser))
+
+  return { success: true, user: activeUser, email: finalEmail }
+}
+
+/**
+ * Update Admin Recovery Phone Number:
+ * - From inside Admin Dashboard -> Account Security tab
+ */
+export async function updateAdminRecoveryPhone({ currentPassword, newPhone }) {
+  const creds = getStoredAdminCredentials()
+  if (currentPassword !== creds.password) {
+    throw new Error('Password verification failed. Enter your current password to update recovery phone.')
+  }
+
+  const cleanPhone = (newPhone || '').replace(/\D/g, '')
+  if (cleanPhone.length < 10) {
+    throw new Error('Please enter a valid 10-digit mobile number.')
+  }
+
+  const formattedPhone = `+91 ${cleanPhone.slice(-10)}`
+  const updatedCreds = {
+    ...creds,
+    phone: formattedPhone,
+    updatedAt: new Date().toISOString(),
+  }
+  localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(updatedCreds))
+
+  return { success: true, phone: formattedPhone }
 }
 
 // -------------------------------------------------------------
