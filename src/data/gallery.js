@@ -2,8 +2,8 @@
 export const categories = [
   { id: 'cinematography', name: 'Cinematography', layout: 'arc', blurb: 'Cinematic stills, lighting compositions, and film frames.' },
   { id: 'fashion', name: 'Fashion', layout: 'ring', blurb: 'High-fashion editorials, textiles, and model aesthetics.' },
-  { id: 'jewellery', name: 'Jewellery', layout: 'scatter', blurb: 'Macro details, brilliance, and intricate craftsmanship.' },
-  { id: 'wedding', name: 'Wedding', layout: 'wall', blurb: 'Timeless ceremonies, sacred rituals, and candid emotion.' },
+  { id: 'jewellery', name: 'Jewellery', layout: 'tunnel', blurb: 'Macro details, brilliance, and intricate craftsmanship.' },
+  { id: 'wedding', name: 'Wedding', layout: 'helix', blurb: 'Timeless ceremonies, sacred rituals, and candid emotion.' },
   { id: 'indoor', name: 'Indoor', layout: 'tunnel', blurb: 'Studio production setups, atelier frames, and lighting.' },
   { id: 'outdoor', name: 'Outdoor', layout: 'helix', blurb: 'Natural daylight, golden hour frames, and on-location shoots.' },
 ]
@@ -39,14 +39,14 @@ export const photos = {
     { src: '/photos/jewellery/08.jpg', ratio: 0.5628, title: 'Jewellery — Frame 08' },
   ],
   wedding: [
-    { src: '/photos/wedding/01.jpg', ratio: 0.5628, title: 'Wedding — Frame 01' },
-    { src: '/photos/wedding/02.jpg', ratio: 0.5628, title: 'Wedding — Frame 02' },
-    { src: '/photos/wedding/03.jpg', ratio: 0.5631, title: 'Wedding — Frame 03' },
+    { src: '/photos/wedding/01.jpg', ratio: 1.7768, title: 'Wedding — Frame 01' },
+    { src: '/photos/wedding/02.jpg', ratio: 1.7768, title: 'Wedding — Frame 02' },
+    { src: '/photos/wedding/03.jpg', ratio: 1.7758, title: 'Wedding — Frame 03' },
     { src: '/photos/wedding/04.jpg', ratio: 1.7768, title: 'Wedding — Frame 04' },
-    { src: '/photos/wedding/05.jpg', ratio: 0.5628, title: 'Wedding — Frame 05' },
+    { src: '/photos/wedding/05.jpg', ratio: 1.7768, title: 'Wedding — Frame 05' },
     { src: '/photos/wedding/06.jpg', ratio: 1.7768, title: 'Wedding — Frame 06' },
-    { src: '/photos/wedding/07.jpg', ratio: 0.5628, title: 'Wedding — Frame 07' },
-    { src: '/photos/wedding/08.jpg', ratio: 0.5631, title: 'Wedding — Frame 08' },
+    { src: '/photos/wedding/07.jpg', ratio: 1.7768, title: 'Wedding — Frame 07' },
+    { src: '/photos/wedding/08.jpg', ratio: 1.7758, title: 'Wedding — Frame 08' },
     { src: '/photos/wedding/09.jpg', ratio: 1.7768, title: 'Wedding — Frame 09' },
   ],
   indoor: [

@@ -16,15 +16,16 @@ const getLayoutTarget = (layout, index, count) => {
       return { rx: 0, ry: -a, px: 0, py: 0, pz: layoutZ.ring }
     }
     case 'helix': {
-      const a = idx * 0.85
-      const y = (idx - (count - 1) / 2) * 1.05
-      return { rx: 0, ry: -a, px: 0, py: -y * 0.85, pz: layoutZ.helix }
+      const a = idx * 0.78
+      const y = (idx - (count - 1) / 2) * 1.35
+      return { rx: 0, ry: -a, px: 0, py: -y, pz: layoutZ.helix }
     }
     case 'tunnel': {
       const pz = idx * 3.2
-      const px = -Math.sin(idx * 1.3) * 2.0
-      const py = -Math.cos(idx * 1.7) * 0.9
-      return { rx: 0, ry: 0, px, py, pz: layoutZ.tunnel + pz }
+      const px = -Math.sin(idx * 1.3) * 2.8
+      const py = -Math.cos(idx * 1.7) * 1.3
+      const ry = Math.sin(idx * 1.3) * 0.3
+      return { rx: 0, ry, px, py, pz: layoutZ.tunnel + pz }
     }
     case 'arc': {
       const t = idx - (count - 1) / 2

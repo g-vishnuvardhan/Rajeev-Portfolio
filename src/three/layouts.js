@@ -19,8 +19,8 @@ export const layouts = {
     return { p: [Math.sin(a) * 5.8, 0, Math.cos(a) * 5.8], r: [0, a, 0] }
   },
   helix: (i, n) => {
-    const a = i * 0.85
-    return { p: [Math.sin(a) * 3.85, (i - (n - 1) / 2) * 1.15, Math.cos(a) * 3.85], r: [0, a, 0] }
+    const a = i * 0.78
+    return { p: [Math.sin(a) * 4.4, (i - (n - 1) / 2) * 1.35, Math.cos(a) * 4.4], r: [0, a, 0] }
   },
   scatter: (i) => ({
     p: [(rand(i, 1) - 0.5) * 10.5, (rand(i, 2) - 0.5) * 5.4, (rand(i, 3) - 0.5) * 6],
@@ -49,4 +49,4 @@ export const layouts = {
 }
 
 // Base z offset of the whole group per layout
-export const layoutZ = { wall: 0, ring: -5.6, helix: -3.4, scatter: 0, tunnel: 2, arc: 0.1, orbit: -4.4, cascade: 1 }
+export const layoutZ = { wall: 0, ring: -5.6, helix: -4.0, scatter: 0, tunnel: 1.5, arc: 0.1, orbit: -4.4, cascade: 1 }
