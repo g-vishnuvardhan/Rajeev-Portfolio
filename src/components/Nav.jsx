@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { nav, site } from '../data/content'
+import { nav, site as staticSite } from '../data/content'
 import { scrollToId } from '../lib/smooth'
 import RKLogo from './RKLogo'
 import { Magnetic, RollText } from './Magnetic'
+import { useData } from '../context/DataContext'
 
 export default function Nav({ ready = true }) {
+  const { site = staticSite } = useData()
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState('home')
   const [scrolled, setScrolled] = useState(false)
@@ -58,6 +60,12 @@ export default function Nav({ ready = true }) {
               </a>
             </li>
           ))}
+          <li>
+            <a href="/admin" className="nav-admin-pill" title="Admin Portal">
+              <span className="admin-lock-icon">🔒</span>
+              <RollText text="Admin" />
+            </a>
+          </li>
         </ul>
       </nav>
     </header>

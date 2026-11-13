@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { site } from '../data/content'
+import { site as staticSite } from '../data/content'
 import { useGsap, gsap } from '../lib/useGsap'
 import { Magnetic, RollText } from '../components/Magnetic'
+import { useData } from '../context/DataContext'
 
 function FlankVideo({ src, poster, className }) {
   const ref = useRef(null)
@@ -42,6 +43,7 @@ function FlankVideo({ src, poster, className }) {
 export default function Contact() {
   const root = useRef()
   const [sent, setSent] = useState(false)
+  const { site = staticSite } = useData()
 
   useGsap(() => {
     gsap.from('.contact-head-line', {

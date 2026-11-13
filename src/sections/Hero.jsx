@@ -1,13 +1,15 @@
 import { useRef } from 'react'
-import { site, heroMedia } from '../data/content'
+import { site as staticSite, heroMedia } from '../data/content'
 import { useGsap, gsap } from '../lib/useGsap'
 import { scrollToId } from '../lib/smooth'
 import { useEnv } from '../lib/env'
 import { Magnetic, RollText } from '../components/Magnetic'
+import { useData } from '../context/DataContext'
 
 export default function Hero({ ready = true }) {
   const root = useRef()
   const env = useEnv()
+  const { site = staticSite } = useData()
 
   useGsap(() => {
     if (!ready) {

@@ -1,8 +1,9 @@
 import { useRef } from 'react'
-import { about, brands, site } from '../data/content'
+import { about as staticAbout, brands, site as staticSite } from '../data/content'
 import { resolveSrc } from '../lib/placeholder'
 import Words from '../components/Words'
 import { useGsap, gsap } from '../lib/useGsap'
+import { useData } from '../context/DataContext'
 
 const STATS = [
   { num: 4, suffix: '+', label: 'Years on set' },
@@ -12,6 +13,7 @@ const STATS = [
 
 export default function About() {
   const root = useRef()
+  const { about = staticAbout, site = staticSite } = useData()
 
   useGsap(() => {
     gsap.from('.about-photo', {

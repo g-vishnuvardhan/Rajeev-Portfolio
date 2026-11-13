@@ -1,15 +1,17 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { categories, photos } from '../data/gallery'
+import { categories as staticCategories, photos as staticPhotos } from '../data/gallery'
 import { resolveSrc } from '../lib/placeholder'
 import { useEnv } from '../lib/env'
 import { useGsap, gsap } from '../lib/useGsap'
 import Lightbox from '../components/Lightbox'
+import { useData } from '../context/DataContext'
 
 const GalleryScene = lazy(() => import('../three/GalleryScene'))
 
 export default function Gallery() {
   const env = useEnv()
-  const [catId, setCatId] = useState(categories[0].id)
+  const { photos = staticPhotos, categories = staticCategories } = useData()
+  const [catId, setCatId] = useState(() => categories[0]?.id || 'cinematography')
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [openIndex, setOpenIndex] = useState(null)
@@ -19,7 +21,7 @@ export default function Gallery() {
   const stage = useRef()
   const use3D = env.webgl && !env.reduced && !env.lowEnd
 
-  const catIndex = categories.findIndex((c) => c.id === catId)
+  const catIndex = Math.max(0, categories.findIndex((c) => c.id === catId))
   const category = categories[catIndex] || categories[0]
 
   const items = useMemo(
