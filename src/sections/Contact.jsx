@@ -1,7 +1,43 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { site } from '../data/content'
 import { useGsap, gsap } from '../lib/useGsap'
 import { Magnetic, RollText } from '../components/Magnetic'
+
+function FlankVideo({ src, poster, className }) {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.muted = true
+    const p = el.play()
+    if (p !== undefined) {
+      p.catch(() => {
+        const resume = () => {
+          el.play().catch(() => {})
+          window.removeEventListener('pointerdown', resume)
+          window.removeEventListener('scroll', resume)
+        }
+        window.addEventListener('pointerdown', resume, { once: true, passive: true })
+        window.addEventListener('scroll', resume, { once: true, passive: true })
+      })
+    }
+  }, [])
+
+  return (
+    <video
+      ref={ref}
+      className={className}
+      src={src}
+      poster={poster}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="metadata"
+    />
+  )
+}
 
 export default function Contact() {
   const root = useRef()
@@ -14,6 +50,14 @@ export default function Contact() {
     })
     gsap.from('.enquiry-wrap .enquiry', {
       y: 42, opacity: 0, duration: 1.0, ease: 'expo.out',
+      scrollTrigger: { trigger: '.enquiry-wrap', start: 'top 84%' },
+    })
+    gsap.from('.enquiry-flank--left', {
+      x: -40, opacity: 0, duration: 1.2, ease: 'expo.out',
+      scrollTrigger: { trigger: '.enquiry-wrap', start: 'top 84%' },
+    })
+    gsap.from('.enquiry-flank--right', {
+      x: 40, opacity: 0, duration: 1.2, ease: 'expo.out',
       scrollTrigger: { trigger: '.enquiry-wrap', start: 'top 84%' },
     })
     // seamless closing reveal: image smoothly merges into the page atmosphere
@@ -46,36 +90,62 @@ export default function Contact() {
       </h2>
 
       <div className="enquiry-wrap">
-        <form className="enquiry glass-panel" onSubmit={submit}>
-          <h3>Project enquiry</h3>
-          <div className="enquiry-row">
-            <label>Name<input name="name" required autoComplete="name" placeholder="Your name" /></label>
-            <label>Email<input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
+        <div className="enquiry-stage">
+          <div className="enquiry-flank enquiry-flank--left" aria-hidden="true">
+            <div className="enquiry-video-aura enquiry-video-aura--gold" />
+            <div className="enquiry-video-media">
+              <FlankVideo
+                src="/videos/jewlary.mp4"
+                poster="/videos/jewellery-poster.jpg"
+                className="enquiry-video"
+              />
+              <div className="enquiry-video-vignette enquiry-video-vignette--left" />
+            </div>
           </div>
-          <label>Project type
-            <select name="type" defaultValue="Cinematography">
-              <option>Cinematography</option>
-              <option>Fashion or model shoot</option>
-              <option>Jewellery or product</option>
-              <option>Brand campaign</option>
-              <option>Interior or outdoor</option>
-              <option>Reels and social content</option>
-              <option>Something else</option>
-            </select>
-          </label>
-          <label>Message<textarea name="message" rows="4" required placeholder="Tell us about your shoot, dates, and vision..." /></label>
-          <Magnetic>
-            <button type="submit" className="glass-btn glass-btn--primary">
-              <RollText text="Send enquiry" />
-              <svg className="btn-arrow" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M2.5 8h11m0 0-4.5-4.5M13.5 8 9 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </Magnetic>
-          <p className="form-note" role="status">
-            {sent ? 'Your email app should open with the enquiry ready to send.' : 'This opens your email app with the message ready to send.'}
-          </p>
-        </form>
+
+          <form className="enquiry glass-panel" onSubmit={submit}>
+            <h3>Project enquiry</h3>
+            <div className="enquiry-row">
+              <label>Name<input name="name" required autoComplete="name" placeholder="Your name" /></label>
+              <label>Email<input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
+            </div>
+            <label>Project type
+              <select name="type" defaultValue="Cinematography">
+                <option>Cinematography</option>
+                <option>Fashion or model shoot</option>
+                <option>Jewellery or product</option>
+                <option>Brand campaign</option>
+                <option>Interior or outdoor</option>
+                <option>Reels and social content</option>
+                <option>Something else</option>
+              </select>
+            </label>
+            <label>Message<textarea name="message" rows="4" required placeholder="Tell us about your shoot, dates, and vision..." /></label>
+            <Magnetic>
+              <button type="submit" className="glass-btn glass-btn--primary">
+                <RollText text="Send enquiry" />
+                <svg className="btn-arrow" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2.5 8h11m0 0-4.5-4.5M13.5 8 9 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </Magnetic>
+            <p className="form-note" role="status">
+              {sent ? 'Your email app should open with the enquiry ready to send.' : 'This opens your email app with the message ready to send.'}
+            </p>
+          </form>
+
+          <div className="enquiry-flank enquiry-flank--right" aria-hidden="true">
+            <div className="enquiry-video-aura enquiry-video-aura--dop" />
+            <div className="enquiry-video-media">
+              <FlankVideo
+                src="/videos/rajeev_dop_post_20261113.mp4"
+                poster="/videos/rk_dop-poster.jpg"
+                className="enquiry-video"
+              />
+              <div className="enquiry-video-vignette enquiry-video-vignette--right" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="closing">

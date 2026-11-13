@@ -1461,19 +1461,110 @@ blockquote { margin: 0; }
 .contact-head-line { display: block; }
 .contact-head .sub { color: var(--grey); font-size: 0.54em; margin-top: 0.35em; }
 .enquiry-wrap {
-  max-width: 820px;
+  max-width: 1340px;
   margin: 0 auto;
-  padding: clamp(3rem, 6vw, 5rem) var(--pad);
+  padding: clamp(2.5rem, 5vw, 4.5rem) var(--pad);
   width: 100%;
 }
+.enquiry-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+.enquiry-flank {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 clamp(230px, 21vw, 290px);
+  width: clamp(230px, 21vw, 290px);
+  height: clamp(430px, 39vw, 530px);
+  aspect-ratio: 9 / 16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+}
+.enquiry-flank--left {
+  margin-right: -24px;
+}
+.enquiry-flank--right {
+  margin-left: -24px;
+}
+.enquiry-video-aura {
+  position: absolute;
+  inset: -15%;
+  border-radius: 50%;
+  filter: blur(52px);
+  opacity: 0.38;
+  pointer-events: none;
+  z-index: 0;
+}
+.enquiry-video-aura--gold {
+  background: radial-gradient(circle, rgba(220, 175, 75, 0.28) 0%, rgba(220, 175, 75, 0.08) 50%, transparent 72%);
+}
+.enquiry-video-aura--dop {
+  background: radial-gradient(circle, rgba(95, 155, 235, 0.25) 0%, rgba(95, 155, 235, 0.07) 50%, transparent 72%);
+}
+.enquiry-video-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 40px;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: inset 0 0 45px 25px #040407, inset 0 0 85px 45px #040407;
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, #000 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%);
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, #000 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%);
+}
+.enquiry-video-vignette {
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 40px;
+}
+.enquiry-video-vignette--left {
+  background:
+    radial-gradient(ellipse 75% 75% at 50% 50%, transparent 18%, rgba(4, 4, 7, 0.5) 48%, rgba(4, 4, 7, 0.98) 78%, #040407 100%),
+    linear-gradient(to bottom, #040407 0%, rgba(4, 4, 7, 0.85) 14%, transparent 28%, transparent 72%, rgba(4, 4, 7, 0.85) 86%, #040407 100%),
+    linear-gradient(to right, #040407 0%, rgba(4, 4, 7, 0.9) 16%, transparent 36%);
+}
+.enquiry-video-vignette--right {
+  background:
+    radial-gradient(ellipse 75% 75% at 50% 50%, transparent 18%, rgba(4, 4, 7, 0.5) 48%, rgba(4, 4, 7, 0.98) 78%, #040407 100%),
+    linear-gradient(to bottom, #040407 0%, rgba(4, 4, 7, 0.85) 14%, transparent 28%, transparent 72%, rgba(4, 4, 7, 0.85) 86%, #040407 100%),
+    linear-gradient(to left, #040407 0%, rgba(4, 4, 7, 0.9) 16%, transparent 36%);
+}
+.enquiry-video {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  border-radius: 0;
+  opacity: 0.9;
+  filter: contrast(1.05) saturate(1.1);
+}
 .enquiry {
+  position: relative;
+  z-index: 2;
+  flex: 0 1 700px;
+  width: 100%;
+  max-width: 700px;
   display: grid;
   gap: 1.25rem;
   padding: clamp(2rem, 5vw, 3.2rem);
-  background: rgba(14, 14, 18, 0.65);
+  background: rgba(14, 14, 18, 0.68);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 .enquiry h3 { font-family: var(--serif); font-weight: 500; font-size: 1.9rem; }
 .enquiry-row {
@@ -1481,7 +1572,49 @@ blockquote { margin: 0; }
   grid-template-columns: 1fr 1fr;
   gap: 1.2rem;
 }
-@media (max-width: 640px) {
+@media (max-width: 1080px) {
+  .enquiry-flank {
+    flex: 0 0 clamp(180px, 19vw, 230px);
+    width: clamp(180px, 19vw, 230px);
+    height: clamp(330px, 34vw, 410px);
+  }
+  .enquiry-flank--left {
+    margin-right: -18px;
+  }
+  .enquiry-flank--right {
+    margin-left: -18px;
+  }
+}
+@media (max-width: 768px) {
+  .enquiry-stage {
+    display: block;
+    position: relative;
+  }
+  .enquiry-flank {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 140px;
+    height: 250px;
+    max-height: none;
+    z-index: 1;
+    opacity: 0.45;
+  }
+  .enquiry-flank--left {
+    left: -20px;
+    margin: 0;
+  }
+  .enquiry-flank--right {
+    right: -20px;
+    margin: 0;
+  }
+  .enquiry {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 100%;
+    background: rgba(14, 14, 18, 0.85);
+  }
   .enquiry-row {
     grid-template-columns: 1fr;
   }
