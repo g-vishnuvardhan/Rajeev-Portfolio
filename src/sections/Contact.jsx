@@ -187,13 +187,15 @@ export default function Contact() {
           </div>
           <div className="closing-contact-item closing-contact-item--instagram">
             <span className="closing-contact-label">Instagram</span>
-            {site.instagram ? (
-              <a href={site.instagram} target="_blank" rel="noopener noreferrer" className="closing-contact-link">
-                <RollText text="Instagram" />
-              </a>
-            ) : (
-              <span className="closing-contact-link muted">Available on request</span>
-            )}
+            <a
+              href={site.instagram || 'https://instagram.com/rajeev_dop'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="closing-contact-link"
+              aria-label="Instagram @rajeev_dop"
+            >
+              <RollText text={site.instagramHandle || '@rajeev_dop'} />
+            </a>
           </div>
           <div className="closing-contact-item closing-contact-item--location">
             <span className="closing-contact-label">Base Location</span>

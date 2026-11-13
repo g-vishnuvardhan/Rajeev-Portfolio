@@ -10,7 +10,8 @@ export const site = {
   phoneHref: 'tel:+919100305010',
   email: 'gantyalarajeevkumar@gmail.com',
   whatsapp: 'https://wa.me/919100305010',
-  instagram: '', // paste the real Instagram URL here when available
+  instagram: 'https://instagram.com/rajeev_dop',
+  instagramHandle: '@rajeev_dop',
 }
 
 export const nav = [
