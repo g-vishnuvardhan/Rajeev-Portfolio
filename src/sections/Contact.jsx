@@ -12,17 +12,23 @@ export default function Contact() {
       yPercent: 105, opacity: 0, duration: 1.15, ease: 'expo.out', stagger: 0.12,
       scrollTrigger: { trigger: '.contact-head', start: 'top 82%' },
     })
-    gsap.from('.contact-grid .glass-panel', {
-      y: 42, opacity: 0, duration: 1.0, stagger: 0.14, ease: 'expo.out',
-      scrollTrigger: { trigger: '.contact-grid', start: 'top 84%' },
+    gsap.from('.enquiry-wrap .enquiry', {
+      y: 42, opacity: 0, duration: 1.0, ease: 'expo.out',
+      scrollTrigger: { trigger: '.enquiry-wrap', start: 'top 84%' },
     })
-    // cinematic closing: letterbox bars close in, then fade to black
+    // cinematic closing: letterbox bars close in, image zooms, reveal name
     const tl = gsap.timeline({
       scrollTrigger: { trigger: '.closing', start: 'top 85%', end: 'bottom bottom', scrub: true },
     })
     tl.fromTo('.bar-top', { yPercent: -100 }, { yPercent: 0, ease: 'none' }, 0)
       .fromTo('.bar-bottom', { yPercent: 100 }, { yPercent: 0, ease: 'none' }, 0)
-      .fromTo('.closing-card', { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, ease: 'none' }, 0.55)
+      .fromTo('.closing-img', { scale: 1.12 }, { scale: 1.0, ease: 'none' }, 0)
+      .fromTo('.closing-card', { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, ease: 'none' }, 0.35)
+
+    gsap.from('.closing-contact-item', {
+      y: 26, opacity: 0, duration: 0.8, stagger: 0.08, ease: 'power3.out',
+      scrollTrigger: { trigger: '.closing-contact', start: 'top 88%' },
+    })
   }, root)
 
   const submit = (e) => {
@@ -41,27 +47,13 @@ export default function Contact() {
         <span className="mask sub"><span className="contact-head-line">Let’s create something cinematic.</span></span>
       </h2>
 
-      <div className="contact-grid">
-        <div className="contact-info glass-panel">
-          <p className="contact-name">{site.name}</p>
-          <p>{site.role}</p>
-          <p>{site.fullLocation}</p>
-          <ul className="contact-links">
-            <li><a href={site.phoneHref}><RollText text={site.phone} /></a></li>
-            <li><a href={`mailto:${site.email}`}><RollText text={site.email} /></a></li>
-            <li><a href={site.whatsapp} target="_blank" rel="noopener noreferrer"><RollText text="WhatsApp" /></a></li>
-            <li>
-              {site.instagram
-                ? <a href={site.instagram} target="_blank" rel="noopener noreferrer"><RollText text="Instagram" /></a>
-                : <span className="muted">Instagram — link to be added</span>}
-            </li>
-          </ul>
-        </div>
-
+      <div className="enquiry-wrap">
         <form className="enquiry glass-panel" onSubmit={submit}>
           <h3>Project enquiry</h3>
-          <label>Name<input name="name" required autoComplete="name" placeholder="Your name" /></label>
-          <label>Email<input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
+          <div className="enquiry-row">
+            <label>Name<input name="name" required autoComplete="name" placeholder="Your name" /></label>
+            <label>Email<input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
+          </div>
           <label>Project type
             <select name="type" defaultValue="Cinematography">
               <option>Cinematography</option>
@@ -91,11 +83,60 @@ export default function Contact() {
       <div className="closing">
         <div className="bar bar-top" />
         <div className="bar bar-bottom" />
+        <div className="closing-media">
+          <img
+            src="/photos/closing-portrait.png"
+            alt={`${site.name} — silhouette`}
+            className="closing-img"
+          />
+          <div className="closing-scrim" aria-hidden="true" />
+        </div>
         <div className="closing-card">
-          <p>{site.name}</p>
-          <p className="muted">{site.role} · {site.location}</p>
+          <p className="closing-name">{site.name}</p>
+          <p className="closing-role muted">{site.role} · {site.location}</p>
         </div>
       </div>
+
+      <footer className="closing-contact">
+        <div className="closing-contact-grid">
+          <div className="closing-contact-item">
+            <span className="closing-contact-label">Direct Phone</span>
+            <a href={site.phoneHref} className="closing-contact-link">
+              <RollText text={site.phone} />
+            </a>
+          </div>
+          <div className="closing-contact-item">
+            <span className="closing-contact-label">Direct Email</span>
+            <a href={`mailto:${site.email}`} className="closing-contact-link">
+              <RollText text={site.email} />
+            </a>
+          </div>
+          <div className="closing-contact-item">
+            <span className="closing-contact-label">WhatsApp</span>
+            <a href={site.whatsapp} target="_blank" rel="noopener noreferrer" className="closing-contact-link">
+              <RollText text="WhatsApp Direct" />
+            </a>
+          </div>
+          <div className="closing-contact-item">
+            <span className="closing-contact-label">Instagram</span>
+            {site.instagram ? (
+              <a href={site.instagram} target="_blank" rel="noopener noreferrer" className="closing-contact-link">
+                <RollText text="Instagram" />
+              </a>
+            ) : (
+              <span className="closing-contact-link muted">Available on request</span>
+            )}
+          </div>
+          <div className="closing-contact-item">
+            <span className="closing-contact-label">Base Location</span>
+            <p className="closing-contact-val">{site.fullLocation}</p>
+          </div>
+        </div>
+        <div className="closing-copyright">
+          <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
+          <p className="closing-tagline">{site.tagline}</p>
+        </div>
+      </footer>
     </section>
   )
 }

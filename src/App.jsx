@@ -11,11 +11,6 @@ import Gallery from './sections/Gallery'
 import HandledProjects from './sections/HandledProjects'
 import SelectedWorks from './sections/SelectedWorks'
 import About from './sections/About'
-import Expertise from './sections/Expertise'
-import Experience from './sections/Experience'
-import Production from './sections/Production'
-import Brands from './sections/Brands'
-import Capabilities from './sections/Capabilities'
 import Contact from './sections/Contact'
 
 export default function App() {
@@ -57,11 +52,6 @@ export default function App() {
         <HandledProjects />
         <SelectedWorks />
         <About />
-        <Expertise />
-        <Experience />
-        <Production />
-        <Brands />
-        <Capabilities />
         <Contact />
       </main>
     </EnvContext.Provider>
