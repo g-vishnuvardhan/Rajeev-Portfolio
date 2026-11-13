@@ -10,6 +10,8 @@ const GalleryScene = lazy(() => import('../three/GalleryScene'))
 export default function Gallery() {
   const env = useEnv()
   const [catId, setCatId] = useState(categories[0].id)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
   const [openIndex, setOpenIndex] = useState(null)
   const [hover, setHover] = useState(null)
   const [visible, setVisible] = useState(false)
@@ -18,20 +20,46 @@ export default function Gallery() {
   const use3D = env.webgl && !env.reduced && !env.lowEnd
 
   const catIndex = categories.findIndex((c) => c.id === catId)
-  const category = categories[catIndex]
+  const category = categories[catIndex] || categories[0]
 
   const items = useMemo(
     () =>
-      photos[catId].map((p, i) => ({
+      (photos[catId] || []).map((p, i) => ({
         ...p,
         url: resolveSrc(p.src, i + catIndex, p.ratio, `${category.name} — photograph slot ${i + 1}`),
       })),
     [catId, catIndex, category.name]
   )
 
+  // Reset active frame when switching category
+  const handleCatChange = (id) => {
+    setCatId(id)
+    setActiveIndex(0)
+    setHover(null)
+  }
+
+  // Automatic moving of frames every 3.5 seconds
+  useEffect(() => {
+    if (!visible || openIndex !== null || isPaused || items.length === 0) return
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % items.length)
+    }, 3500)
+    return () => clearInterval(timer)
+  }, [visible, openIndex, isPaused, items.length, catId])
+
+  const prevFrame = (e) => {
+    e?.stopPropagation()
+    setActiveIndex((prev) => (prev - 1 + items.length) % items.length)
+  }
+
+  const nextFrame = (e) => {
+    e?.stopPropagation()
+    setActiveIndex((prev) => (prev + 1) % items.length)
+  }
+
   useEffect(() => {
     const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.05 })
-    io.observe(stage.current)
+    if (stage.current) io.observe(stage.current)
     return () => io.disconnect()
   }, [])
 
@@ -50,6 +78,8 @@ export default function Gallery() {
     })
   }, root)
 
+  const activeTitle = items[activeIndex]?.title || `${category.name} — Frame ${String(activeIndex + 1).padStart(2, '0')}`
+
   return (
     <section id="work" className="gallery" ref={root}>
       <header className="section-head">
@@ -59,22 +89,31 @@ export default function Gallery() {
 
       <div className="tabs" role="group" aria-label="Photography categories">
         {categories.map((c) => (
-          <button key={c.id} className="tab" aria-pressed={c.id === catId} onClick={() => setCatId(c.id)}>
+          <button key={c.id} className="tab" aria-pressed={c.id === catId} onClick={() => handleCatChange(c.id)}>
             {c.name}
           </button>
         ))}
       </div>
 
-      <div className="stage" ref={stage}>
+      <div
+        className="stage"
+        ref={stage}
+        onPointerEnter={() => setIsPaused(true)}
+        onPointerLeave={() => setIsPaused(false)}
+      >
         {use3D ? (
           <Suspense fallback={<p className="stage-note">Loading gallery</p>}>
             <GalleryScene
               items={items}
               layout={category.layout}
+              activeIndex={activeIndex}
               visible={visible}
               mobile={env.mobile}
               onOpen={setOpenIndex}
-              onHover={setHover}
+              onHover={(idx) => {
+                setHover(idx)
+                if (idx !== null) setActiveIndex(idx)
+              }}
             />
           </Suspense>
         ) : (
@@ -88,27 +127,33 @@ export default function Gallery() {
             ))}
           </ul>
         )}
-        {use3D && (
-          <>
-            <p className="stage-title" aria-hidden="true">
-              {hover !== null ? items[hover].title || `${category.name} ${String(hover + 1).padStart(2, '0')}` : ''}
-            </p>
-            <p className="stage-hint" aria-hidden="true">
-              {env.mobile ? 'Swipe to turn · Tap to open' : 'Move to look around · Drag to turn · Click to open'}
-            </p>
-          </>
-        )}
+
+        <p className="stage-title" aria-hidden="true">
+          {activeTitle}
+        </p>
+
+        <div className="stage-hint" aria-hidden="true">
+          <span className="stage-hint-dot" />
+          <span>{env.mobile ? 'Auto-playing 3.5s · Tap to open' : 'Auto-advancing 3.5s · Click frame to open'}</span>
+        </div>
+
+        <div className="stage-counter" aria-label={`Frame ${activeIndex + 1} of ${items.length}`}>
+          <button className="stage-nav-btn" onClick={prevFrame} aria-label="Previous frame">‹</button>
+          <span className="stage-counter-num">{String(activeIndex + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}</span>
+          <div className="stage-progress">
+            <div key={`${catId}-${activeIndex}`} className={`stage-progress-fill ${isPaused ? 'is-paused' : ''}`} />
+          </div>
+          <button className="stage-nav-btn" onClick={nextFrame} aria-label="Next frame">›</button>
+        </div>
       </div>
 
-      {use3D && (
-        <ul className="sr-only">
-          {items.map((it, i) => (
-            <li key={i}>
-              <button onClick={() => setOpenIndex(i)}>Open {category.name} photograph {i + 1}</button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="sr-only">
+        {items.map((it, i) => (
+          <li key={i}>
+            <button onClick={() => setOpenIndex(i)}>Open {category.name} photograph {i + 1}</button>
+          </li>
+        ))}
+      </ul>
 
       <Lightbox items={items} index={openIndex} onClose={() => setOpenIndex(null)} onIndex={setOpenIndex} category={category.name} />
     </section>

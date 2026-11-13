@@ -34,7 +34,7 @@ export default function Cursor() {
       dx(e.clientX)
       dy(e.clientY)
 
-      const target = e.target.closest('a, button, [data-cursor], .prod-card, .exp-title, .cap-title, .stage-canvas')
+      const target = e.target.closest('a, button, [data-cursor], .prod-card, .exp-title, .cap-title')
       if (!target) {
         setActive(false)
         setLabel('')
@@ -42,7 +42,6 @@ export default function Cursor() {
       }
       setActive(true)
       if (target.dataset?.cursor) setLabel(target.dataset.cursor)
-      else if (target.classList.contains('stage-canvas')) setLabel('DRAG')
       else if (target.classList.contains('prod-card')) setLabel('VIEW')
       else setLabel('')
     }
