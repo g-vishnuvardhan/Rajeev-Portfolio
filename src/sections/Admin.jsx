@@ -262,7 +262,7 @@ export default function Admin() {
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@rajeevkumar.com"
+                placeholder="247r1a05e9@cmrtc.ac.in"
                 autoComplete="email"
               />
             </label>
@@ -286,25 +286,39 @@ export default function Admin() {
 
           {!isSupabaseConfigured && (
             <div className="admin-demo-box">
-              <p className="admin-demo-title">💡 Demo Access (Cloud credentials pending in .env)</p>
+              <p className="admin-demo-title">💡 Authorized Admin Access</p>
               <p className="admin-demo-text">
-                Click below to auto-fill preview credentials, or link Supabase in <code>.env</code> for live cloud PostgreSQL storage:
+                Click below to auto-fill your admin credentials (or link Supabase in <code>.env</code> for cloud auth):
               </p>
               <button
                 type="button"
                 className="admin-demo-btn"
                 onClick={() => {
-                  setLoginEmail('admin@rajeevkumar.com')
-                  setLoginPassword('admin123')
+                  setLoginEmail('247r1a05e9@cmrtc.ac.in')
+                  setLoginPassword('247r1a05e9cmr')
                 }}
               >
-                Use Demo Login (admin@rajeevkumar.com / admin123)
+                Auto-fill Admin Credentials (247r1a05e9@cmrtc.ac.in)
               </button>
             </div>
           )}
 
           <div className="admin-login-footer">
-            <a href="/" className="admin-back-link">← Return to Public Portfolio</a>
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault()
+                if (window.location.hash.startsWith('#/admin') || window.location.hash.startsWith('#admin')) {
+                  window.location.hash = ''
+                } else {
+                  window.history.pushState(null, '', '/')
+                  window.dispatchEvent(new PopStateEvent('popstate'))
+                }
+              }}
+              className="admin-back-link"
+            >
+              ← Return to Public Portfolio
+            </a>
           </div>
         </div>
       </div>

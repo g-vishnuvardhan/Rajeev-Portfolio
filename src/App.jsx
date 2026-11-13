@@ -16,27 +16,34 @@ import Admin from './sections/Admin'
 export default function App() {
   const env = useMemo(detectEnv, [])
   const [heroReady, setHeroReady] = useState(env.reduced)
-  const [isAdmin, setIsAdmin] = useState(() => {
-    return (
-      window.location.pathname === '/admin' ||
-      window.location.hash.startsWith('#/admin') ||
-      window.location.hash.startsWith('#admin')
-    )
-  })
+  const checkIsAdmin = () => {
+    const p = window.location.pathname
+    const h = window.location.hash
+    return p === '/admin' || p.startsWith('/admin') || h.startsWith('#/admin') || h.startsWith('#admin')
+  }
+
+  const [isAdmin, setIsAdmin] = useState(checkIsAdmin)
 
   useEffect(() => {
     const handleRoute = () => {
-      setIsAdmin(
-        window.location.pathname === '/admin' ||
-        window.location.hash.startsWith('#/admin') ||
-        window.location.hash.startsWith('#admin')
-      )
+      setIsAdmin(checkIsAdmin())
     }
     window.addEventListener('popstate', handleRoute)
     window.addEventListener('hashchange', handleRoute)
+
+    // Secret Admin shortcut: Press Ctrl + Shift + A (or Cmd + Shift + A) to access the separate admin page
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault()
+        window.location.hash = '#/admin'
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+
     return () => {
       window.removeEventListener('popstate', handleRoute)
       window.removeEventListener('hashchange', handleRoute)
+      window.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
 

@@ -60,12 +60,6 @@ export default function Nav({ ready = true }) {
               </a>
             </li>
           ))}
-          <li>
-            <a href="/admin" className="nav-admin-pill" title="Admin Portal">
-              <span className="admin-lock-icon">🔒</span>
-              <RollText text="Admin" />
-            </a>
-          </li>
         </ul>
       </nav>
     </header>

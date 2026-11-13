@@ -36,14 +36,14 @@ export async function loginAdmin(email, password) {
     return data.user
   }
 
-  // Demo / Local Mode (when Supabase credentials are not in .env yet)
-  if (email.trim().toLowerCase() === 'admin@rajeevkumar.com' && password === 'admin123') {
-    const demoUser = { email: 'admin@rajeevkumar.com', id: 'demo-admin-id', role: 'admin' }
-    localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(demoUser))
-    return demoUser
+  // Initial / Local Mode (when Supabase credentials are not in .env yet)
+  if (email.trim().toLowerCase() === '247r1a05e9@cmrtc.ac.in' && password === '247r1a05e9cmr') {
+    const adminUser = { email: '247r1a05e9@cmrtc.ac.in', id: 'admin-cmr-id', role: 'admin' }
+    localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(adminUser))
+    return adminUser
   }
 
-  throw new Error('Invalid email or password. (Demo login: admin@rajeevkumar.com / admin123)')
+  throw new Error('Invalid email or password.')
 }
 
 export async function logoutAdmin() {
@@ -60,7 +60,13 @@ export async function getCurrentAdmin() {
   }
   try {
     const saved = localStorage.getItem(STORAGE_KEYS.AUTH)
-    return saved ? JSON.parse(saved) : null
+    if (!saved) return null
+    const parsed = JSON.parse(saved)
+    if (parsed.email === '247r1a05e9@cmrtc.ac.in') {
+      return parsed
+    }
+    localStorage.removeItem(STORAGE_KEYS.AUTH)
+    return null
   } catch {
     return null
   }
