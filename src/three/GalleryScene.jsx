@@ -60,6 +60,7 @@ function Photo({ item, index, count, layout, activeIndex, mobile, onOpen, onHove
   const mesh = useRef()
   const mat = useRef()
   const hovered = useRef(false)
+  const born = useRef(null)
   const currentOpacity = useRef(1)
   const { p, r } = useMemo(() => layouts[layout](index, count), [layout, index, count])
   const h = mobile ? 2.0 : 2.25
