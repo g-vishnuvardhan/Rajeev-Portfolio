@@ -17,7 +17,7 @@ const getLayoutTarget = (layout, index, count) => {
     }
     case 'helix': {
       const a = (idx / count) * Math.PI * 2
-      const y = (idx - (count - 1) / 2) * 1.45
+      const y = (idx - (count - 1) / 2) * 1.55
       return { rx: 0, ry: -a, px: 0, py: -y, pz: layoutZ.helix }
     }
     case 'tunnel': {
@@ -63,8 +63,8 @@ function Photo({ item, index, count, layout, activeIndex, mobile, onOpen, onHove
   const born = useRef(null)
   const currentOpacity = useRef(1)
   const { p, r } = useMemo(() => layouts[layout](index, count), [layout, index, count])
-  const h = mobile ? 2.0 : 2.25
-  const w = Math.min(h * item.ratio, mobile ? 3.4 : 3.9)
+  const h = mobile ? 2.25 : 2.5
+  const w = Math.min(h * item.ratio, mobile ? 3.7 : 4.3)
 
   const isActive = index === activeIndex
   const isTunnel = layout === 'tunnel'

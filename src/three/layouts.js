@@ -20,7 +20,7 @@ export const layouts = {
   },
   helix: (i, n) => {
     const a = (i / n) * Math.PI * 2
-    return { p: [Math.sin(a) * 5.8, (i - (n - 1) / 2) * 1.45, Math.cos(a) * 5.8], r: [0, a, 0] }
+    return { p: [Math.sin(a) * 6.0, (i - (n - 1) / 2) * 1.55, Math.cos(a) * 6.0], r: [0, a, 0] }
   },
   scatter: (i) => ({
     p: [(rand(i, 1) - 0.5) * 10.5, (rand(i, 2) - 0.5) * 5.4, (rand(i, 3) - 0.5) * 6],
@@ -29,7 +29,7 @@ export const layouts = {
   tunnel: (i) => {
     const side = i % 2 === 0 ? -1 : 1
     return {
-      p: [side * 1.6, 0, -i * 3.4],
+      p: [side * 1.8, 0, -i * 3.4],
       r: [0, -side * 0.15, 0],
     }
   },
