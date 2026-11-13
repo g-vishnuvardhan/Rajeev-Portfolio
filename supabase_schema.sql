@@ -126,3 +126,55 @@ VALUES (
     }'::jsonb
 )
 ON CONFLICT (id) DO NOTHING;
+
+-- 8. Admin Access Control (isAdmin flag in Supabase)
+CREATE TABLE IF NOT EXISTS public.admin_settings (
+    id TEXT PRIMARY KEY,
+    is_admin BOOLEAN NOT NULL DEFAULT true,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for admin_settings
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read access so the web client can check isAdmin
+CREATE POLICY "Public Can Read Admin Settings"
+    ON public.admin_settings
+    FOR SELECT
+    USING (true);
+
+-- Allow modifying admin settings
+CREATE POLICY "Allow Modifying Admin Settings"
+    ON public.admin_settings
+    FOR ALL
+    USING (true)
+    WITH CHECK (true);
+
+-- Seed isAdmin = true in Supabase
+INSERT INTO public.admin_settings (id, is_admin)
+VALUES ('access_control', true)
+ON CONFLICT (id) DO UPDATE SET is_admin = EXCLUDED.is_admin;
+
+-- Allow anonymous/public insert & update on gallery_photos and site_content when managing from admin
+CREATE POLICY "Allow Insert Gallery Photos"
+    ON public.gallery_photos
+    FOR INSERT
+    WITH CHECK (true);
+
+CREATE POLICY "Allow Update Gallery Photos"
+    ON public.gallery_photos
+    FOR UPDATE
+    USING (true)
+    WITH CHECK (true);
+
+CREATE POLICY "Allow Delete Gallery Photos"
+    ON public.gallery_photos
+    FOR DELETE
+    USING (true);
+
+CREATE POLICY "Allow Update Site Content"
+    ON public.site_content
+    FOR ALL
+    USING (true)
+    WITH CHECK (true);
+

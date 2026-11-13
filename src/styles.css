@@ -1686,362 +1686,26 @@ blockquote { margin: 0; }
   color: #ffffff;
 }
 
-/* Google Authentication & Verification Container */
-.google-auth-container {
+/* Access Restricted Locked Card */
+.admin-badge--red {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #f87171 !important;
+}
+
+.admin-locked-icon {
+  font-size: 2.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.admin-locked-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  margin-bottom: 1.5rem;
-}
-
-.google-signin-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.85rem 1.2rem;
-  background: #ffffff;
-  color: #1f2937;
-  font-family: var(--sans);
-  font-size: 0.92rem;
-  font-weight: 600;
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
-}
-
-.google-signin-btn:hover {
-  background: #f8fafc;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(66, 133, 244, 0.3);
-}
-
-.google-quick-accounts-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 0.65rem 0.85rem;
-}
-
-.quick-acc-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--grey);
-}
-
-.quick-acc-btns {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.quick-acc-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: rgba(66, 133, 244, 0.12);
-  border: 1px solid rgba(66, 133, 244, 0.35);
-  color: #93c5fd;
-  font-family: var(--mono);
-  font-size: 0.74rem;
-  padding: 0.35rem 0.7rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.quick-acc-chip:hover {
-  background: rgba(66, 133, 244, 0.22);
-  border-color: #60a5fa;
-  color: #ffffff;
-  transform: translateY(-1px);
-}
-
-.quick-acc-dot {
-  font-size: 0.65rem;
-  color: #4ade80;
-}
-
-/* Auth Divider */
-.auth-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 1.25rem 0 1.5rem;
-  color: var(--grey);
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.auth-divider span {
-  padding: 0 0.85rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--grey);
-}
-
-/* Google Badge Pill */
-.google-badge-pill {
-  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(66, 133, 244, 0.12);
-  border: 1px solid rgba(66, 133, 244, 0.35);
-  color: #93c5fd;
-  font-size: 0.74rem;
-  font-weight: 500;
-  margin-bottom: 1rem;
 }
 
-/* Google Steps Navigation */
-.google-steps-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  margin-bottom: 1.5rem;
-}
-
-.google-step-item {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.76rem;
-  color: var(--grey);
-}
-
-.google-step-item.is-active {
-  color: #93c5fd;
-  font-weight: 600;
-}
-
-.google-step-item.is-done {
-  color: #4ade80;
-}
-
-.step-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  font-size: 0.7rem;
-}
-
-.is-active .step-num {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.is-done .step-num {
-  background: #16a34a;
-  color: #ffffff;
-}
-
-.step-connector {
-  width: 28px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* Google Recovery Card & Whitelist Picker */
-.google-recovery-step {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-.google-whitelist-notice {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: 12px;
-  padding: 1.1rem;
-}
-
-.whitelist-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #e2e8f0;
-  margin-bottom: 0.35rem;
-}
-
-.whitelist-desc {
-  font-size: 0.78rem;
-  color: #94a3b8;
-  margin-bottom: 0.85rem;
-  line-height: 1.45;
-}
-
-.google-account-selector-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.google-account-option {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.google-account-option:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.google-account-option.is-selected {
-  background: rgba(59, 130, 246, 0.14);
-  border-color: #3b82f6;
-}
-
-.google-account-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  flex: 1;
-}
-
-.account-email {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: #f8fafc;
-  word-break: break-all;
-}
-
-.account-tag {
-  font-size: 0.7rem;
-  color: #94a3b8;
-}
-
-.google-check-icon {
-  font-size: 0.85rem;
-  color: #3b82f6;
-  font-weight: 700;
-}
-
-.custom-google-input-box {
-  margin-top: 0.75rem;
-}
-
-.admin-input {
-  width: 100%;
-  font: inherit;
-  font-size: 0.92rem;
-  color: var(--white);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-}
-
-.admin-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-}
-
-.google-verify-submit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.95rem 1.2rem;
-  background: #ffffff;
-  color: #111827;
-  font-family: var(--sans);
-  font-size: 0.92rem;
-  font-weight: 600;
-  border-radius: 9px;
-  border: 1px solid #e5e7eb;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-}
-
-.google-verify-submit-btn:hover:not(:disabled) {
-  background: #f1f5f9;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(66, 133, 244, 0.35);
-}
-
-.google-verify-submit-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.google-magic-link-box {
-  text-align: center;
-  font-size: 0.76rem;
-  color: var(--grey);
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-/* Verified Google Session Card */
-.google-verified-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.06));
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  border-radius: 10px;
-  padding: 1.1rem;
-  margin-bottom: 0.5rem;
-}
-
-.verified-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.35rem;
-}
-
-.verified-shield {
-  font-size: 1.4rem;
-}
-
-.verified-head strong {
-  display: block;
-  font-size: 0.92rem;
-  color: #34d399;
-}
-
-.verified-email {
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  color: #a7f3d0;
-}
-
-.verified-desc {
-  font-size: 0.78rem;
-  color: #94a3b8;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Nav user badge */
+/* Nav Admin Badge */
 .admin-nav-meta {
   display: flex;
   align-items: center;
@@ -2050,96 +1714,112 @@ blockquote { margin: 0; }
   flex-wrap: wrap;
 }
 
-.admin-nav-user-pill {
+.admin-nav-admin-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   font-family: var(--mono);
   font-size: 0.72rem;
-  color: #93c5fd;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.28);
-  padding: 0.2rem 0.6rem;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
 }
 
-/* Dashboard Security Tab: Google Status */
-.google-status-head {
+/* Tab 3: isAdmin Access Control Panel */
+.admin-card-head-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
-}
-
-.google-status-head h3 {
-  margin-bottom: 0.2rem;
-}
-
-.google-authorized-list-box {
-  margin-top: 1.25rem;
-}
-
-.authorized-list-title {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--grey);
-  margin-bottom: 0.75rem;
-}
-
-.authorized-accounts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  justify-content: space-between;
   gap: 1rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
 }
 
-.authorized-account-card {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 0.9rem 1.1rem;
-}
-
-.acc-icon-wrap {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
-}
-
-.acc-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  flex: 1;
-}
-
-.acc-info strong {
-  font-family: var(--mono);
-  font-size: 0.82rem;
-  color: #f1f5f9;
-}
-
-.acc-info span {
-  font-size: 0.72rem;
-  color: #94a3b8;
-}
-
-.acc-status-tag {
+.admin-pill-status {
   font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+}
+
+.admin-isadmin-control-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.isadmin-status-detail p {
+  font-size: 0.95rem;
+  color: var(--white);
+  margin-bottom: 0.3rem;
+}
+
+.isadmin-status-detail p strong {
   color: #34d399;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  padding: 0.2rem 0.55rem;
-  border-radius: 4px;
+  font-family: var(--mono);
+}
+
+.isadmin-status-detail span {
+  font-size: 0.8rem;
+  color: var(--grey);
+  line-height: 1.4;
+}
+
+.isadmin-toggle-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.admin-lock-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-lock-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.admin-unlock-btn {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-unlock-btn:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #10b981;
+  color: #ffffff;
 }
 
 /* Account Security Tab: Recovery Mobile Card */
